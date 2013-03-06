@@ -9,7 +9,7 @@
   GREETING4=""
 
 # Hostname for target system (openelec)
-  HOSTNAME="openelec"
+  HOSTNAME="Scheme"
 
 # Root password to integrate in the target system
   ROOT_PASSWORD="openelec"
