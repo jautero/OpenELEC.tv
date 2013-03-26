@@ -12,16 +12,16 @@
   HOSTNAME="Scheme"
 
 # Root password to integrate in the target system
-  ROOT_PASSWORD="openelec"
+  ROOT_PASSWORD="Bairoos7"
 
 # User to integrate in the target system
-  USER_NAME="openelec"
+  USER_NAME="jautero"
 
 # User group to integrate in the target system
-  USER_GROUP="openelec"
+  USER_GROUP="jautero"
 
 # User password to integrate in the target system
-  USER_PASSWORD="openelec"
+  USER_PASSWORD="eeshoh3C"
 
 # The TARGET_CPU variable controls which processor should be targeted for
 # generated code.
