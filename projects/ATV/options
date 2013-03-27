@@ -87,7 +87,7 @@
 
 # Bootloader to use (syslinux / u-boot / atv-bootloader)
 #  BOOTLOADER="atv-bootloader" disabled for now
-  BOOTLOADER=""
+  BOOTLOADER="atv-bootloader"
 
 # Configuration for u-boot
   UBOOT_CONFIG=""
@@ -223,7 +223,7 @@
   UDISKS="yes"
 
 # build and install powermanagement support (upower) (yes / no)
-  UPOWER="yes"
+  UPOWER="no"
 
 # build and install exFAT fuse support (yes / no)
   EXFAT="yes"
@@ -319,7 +319,7 @@
   UPDATE_SUPPORT="yes"
 
 # build with installer (yes / no)
-  INSTALLER_SUPPORT="yes"
+  INSTALLER_SUPPORT="no"
 
 # Testpackages for development (yes / no)
   TESTING="no"
