@@ -38,9 +38,9 @@ if [ "$OPENELEC_VERSION" = devel -o "$OPENELEC_VERSION" = debug ]; then
   GIT_BUILD=`git rev-list HEAD | wc -l`
   GIT_HASH=`git rev-parse HEAD`
   if [ -n "$BUILD_NUMBER" ]; then
-      OPENELEC_VERSION=$OPENELEC_VERSION-$BUILD_DATE-r$GIT_BUILD
-  else
       OPENELEC_VERSION=$OPENELEC_VERSION-$BUILD_NUMBER-r$GIT_BUILD
+  else
+      OPENELEC_VERSION=$OPENELEC_VERSION-$BUILD_DATE-r$GIT_BUILD
   fi
 fi
 
