@@ -19,13 +19,18 @@
 ################################################################################
 
 PKG_NAME="xbmc"
-PKG_VERSION="12.0.3"
+PKG_VERSION="12.2.0"
+if [ "$XBMC" = "master" ]; then
+  PKG_VERSION="6aa6247"
+elif [ "$XBMC" = "xbmc-aml" ]; then
+  PKG_VERSION="aml-frodo-d9119f2"
+fi
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.xbmc.org"
 PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
-PKG_DEPENDS="boost Python zlib bzip2 systemd pcre ffmpeg libass curl libssh rtmpdump fontconfig tinyxml freetype libmad libogg libmodplug faad2 flac libmpeg2 taglib yajl sqlite xbmc-addon-settings"
+PKG_DEPENDS="Python zlib bzip2 systemd ffmpeg libass curl rtmpdump fontconfig freetype libmad libogg libmodplug faad2 flac libmpeg2 taglib service.openelec.settings"
 PKG_BUILD_DEPENDS="toolchain boost Python zlib bzip2 systemd lzo pcre swig ffmpeg libass enca curl libssh rtmpdump fontconfig fribidi tinyxml libjpeg-turbo libpng tiff freetype jasper libmad libsamplerate libogg libcdio libmodplug faad2 flac libmpeg2 taglib yajl sqlite"
 PKG_PRIORITY="optional"
 PKG_SECTION="mediacenter"
@@ -64,17 +69,13 @@ fi
 if [ "$OPENGL" = "Mesa" ]; then
   # for OpenGL (GLX) support
   PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS Mesa glu glew"
-  PKG_DEPENDS="$PKG_DEPENDS Mesa glu glew"
+  PKG_DEPENDS="$PKG_DEPENDS Mesa glu"
 fi
 
 if [ "$OPENGLES_SUPPORT" = yes ]; then
   # for OpenGL-ES support
   PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS $OPENGLES"
   PKG_DEPENDS="$PKG_DEPENDS $OPENGLES"
-  if [ "$OPENGLES" = "marvell-libgfx" ]; then
-    PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS marvell-libvmeta marvell-ipp"
-    PKG_DEPENDS="$PKG_DEPENDS marvell-libvmeta marvell-ipp"
-  fi
 fi
 
 # for dbus support
@@ -102,7 +103,6 @@ fi
 
 if [ "$XBMC_SCR_RSXS" = yes ]; then
   PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS libXt libXmu"
-  PKG_DEPENDS="$PKG_DEPENDS libXt libXmu"
 fi
 
 if [ "$FAAC_SUPPORT" = yes ]; then
@@ -141,8 +141,13 @@ if [ "$AIRPLAY_SUPPORT" = yes ]; then
 fi
 
 if [ "$AIRTUNES_SUPPORT" = yes ]; then
-  PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS libshairport"
-  PKG_DEPENDS="$PKG_DEPENDS libshairport"
+  if [ "$XBMC" = master ]; then
+    PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS libshairplay"
+    PKG_DEPENDS="$PKG_DEPENDS libshairplay"
+  else 
+    PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS libshairport"
+    PKG_DEPENDS="$PKG_DEPENDS libshairport"
+  fi
 fi
 
 if [ "$NFS_SUPPORT" = yes ]; then
@@ -164,9 +169,14 @@ if [ "$WEBSERVER" = yes ]; then
   PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS libmicrohttpd"
 fi
 
-if [ "$OPENMAX_SUPPORT" = yes ]; then
-  PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS $OPENMAX"
-  PKG_DEPENDS="$PKG_DEPENDS $OPENMAX"
+if [ ! "$XBMCPLAYER_DRIVER" = default ]; then
+  PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS $XBMCPLAYER_DRIVER"
+  PKG_DEPENDS="$PKG_DEPENDS $XBMCPLAYER_DRIVER"
+
+  if [ "$XBMCPLAYER_DRIVER" = marvell-libvmeta ]; then
+    PKG_BUILD_DEPENDS="$PKG_BUILD_DEPENDS marvell-ipp"
+    PKG_DEPENDS="$PKG_DEPENDS marvell-ipp"
+  fi
 fi
 
 if [ "$VDPAU" = yes ]; then

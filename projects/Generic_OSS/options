@@ -1,5 +1,8 @@
 # Name of the Distro to build (full name, without special charcters)
   DISTRONAME="OpenELEC"
+  if [ "$XBMC" = "master" ]; then
+    DISTRONAME="${DISTRONAME}_Gotham"
+  fi
 
 # Welcome Message for e.g. SSH Server (up to 5 Lines)
   GREETING0="##############################################"
@@ -85,14 +88,23 @@
 # LTO (Link Time Optimization) support
   LTO_SUPPORT="yes"
 
+# GOLD (Google Linker) support
+  GOLD_SUPPORT="yes"
+
 # Bootloader to use (syslinux / u-boot / atv-bootloader)
   BOOTLOADER="syslinux"
+
+# u-boot version to use (default / aml / cubox)
+  UBOOT_VERSION="default"
 
 # Configuration for u-boot
   UBOOT_CONFIG=""
 
 # Target Configfile for u-boot
   UBOOT_CONFIGFILE=""
+
+# install Berryboot support tools
+  BERRYBOOT_TOOLS="no"
 
 # Kernel to use. values can be:
 # default:  default mainline kernel
@@ -160,7 +172,7 @@
 # for a list of additinoal drivers see packages/linux-drivers
 # Space separated list is supported,
 # e.g. ADDITIONAL_DRIVERS="DRIVER1 DRIVER2"
-  ADDITIONAL_DRIVERS="RTL8192CU dvbhdhomerun"
+  ADDITIONAL_DRIVERS="RTL8192CU RTL8188EU dvbhdhomerun"
 
 # build with network support (yes / no)
   NETWORK="yes"
@@ -250,8 +262,8 @@
 # e.g. GRAPHIC_DRIVERS="i915 i965 r300 r600 nvidia nouveau"
   GRAPHIC_DRIVERS="i915 i965 r200 r300 r600 nouveau"
 
-# OpenMAX implementation to use (no / bcm2835-driver)
-  OPENMAX="no"
+# XBMC Player implementation to use (default / bcm2835-driver / libamlplayer-m3)
+  XBMCPLAYER_DRIVER="default"
 
 # Use VDPAU video acceleration (needs nVidia driver and a supported card)
   VDPAU="no"
@@ -270,7 +282,7 @@
   REMOTE_SUPPORT="yes"
 
 # build and install ATV IR remote support (yes / no)
-  ATVCLIENT_SUPPORT="yes"
+  ATVCLIENT_SUPPORT="no"
 
 # build and install IRServer IR/LCD support (yes / no)
   IRSERVER_SUPPORT="yes"
@@ -311,11 +323,8 @@
 # build with swap support (yes / no)
   SWAP_SUPPORT="no"
 
-# swapfile size if SWAP_SUPPORT=yes in kB (example: 262144 = 256MB )
-  SWAPFILESIZE="262144"
-
-# build with automatic update support (yes / no)
-  UPDATE_SUPPORT="yes"
+# swapfile size if SWAP_SUPPORT=yes in MB
+  SWAPFILESIZE="256"
 
 # build with installer (yes / no)
   INSTALLER_SUPPORT="yes"
@@ -332,6 +341,9 @@
 # cron support (yes / no)
   CRON_SUPPORT="yes"
 
+# Perf support in development builds (yes / no)
+  PERF_SUPPORT="yes"
+
 # Coreboot support (yes / no)
   COREBOOT="no"
 
@@ -343,5 +355,5 @@
   ADDON_SERVER_URL="http://addons.openelec.tv"
 
 # set the addon dirs
-  ADDON_PATH="$ADDON_VERSION/$PROJECT/$TARGET_ARCH"
+  ADDON_PATH="$ADDON_VERSION/Generic/$TARGET_ARCH"
   ADDON_URL="$ADDON_SERVER_URL/$ADDON_PATH"

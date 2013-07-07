@@ -8,6 +8,7 @@
   <string id="1030">Enable hardware PID filter</string>
   <string id="1035">Enable IR receiver</string>
   <string id="1040">Lowest adapter number (/dev/dvb/adapterX/)</string>
+  <string id="1050">Enable suspend/resume the driver</string>
 
   <string id="2000">Networking</string>
   <string id="2005">Share local tuner over network</string>
@@ -25,7 +26,7 @@
 
   <string id="9000">Tuner settings</string>
   <string id="9005">Enable modifying settings</string>
-  <string id="9010">Refresh...</string>
+  <string id="9010">Refresh tuners... (press me)</string>
   <string id="9020">    IR protocol</string>
   <string id="9030">    keymap filename</string>
 </strings>

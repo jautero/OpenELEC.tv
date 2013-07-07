@@ -2,7 +2,7 @@
 
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2012 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2013 Stephan Raue (stephan@openelec.tv)
 #
 #  This Program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -22,6 +22,18 @@
 
 . /etc/profile
 
+# start locking mechanism - allows only one instance to be run at a time
+SUNDTEK_LOCKFILE="/var/lock/userspace-driver-sundtek.lck"
+SUNDTEK_LOCKFD=99
+# obtain an exclusive lock
+exlock() { eval "exec $SUNDTEK_LOCKFD>\"$SUNDTEK_LOCKFILE\""; flock -x $SUNDTEK_LOCKFD; }
+# drop a lock
+unlock() { flock -u $SUNDTEK_LOCKFD; flock -xn $SUNDTEK_LOCKFD && rm -f "$SUNDTEK_LOCKFILE"; }
+# end locking mechanism
+
+# exclusive lock
+exlock
+
 net_tuner_num_fix() {
   local num=$1
 
@@ -32,55 +44,58 @@ net_tuner_num_fix() {
   echo $num
 }
 
-ADDON_DIR="$HOME/.xbmc/addons/driver.dvb.sundtek-mediatv"
-ADDON_HOME="$HOME/.xbmc/userdata/addon_data/driver.dvb.sundtek-mediatv"
-ADDON_SETTINGS="$ADDON_HOME/settings.xml"
+SUNDTEK_ADDON_DIR="$HOME/.xbmc/addons/driver.dvb.sundtek-mediatv"
+SUNDTEK_ADDON_HOME="$HOME/.xbmc/userdata/addon_data/driver.dvb.sundtek-mediatv"
+SUNDTEK_ADDON_SETTINGS="$SUNDTEK_ADDON_HOME/settings.xml"
 
-mkdir -p $ADDON_HOME
+mkdir -p $SUNDTEK_ADDON_HOME
 
-if [ ! -f "$ADDON_HOME/sundtek.conf" ]; then
-  cp $ADDON_DIR/config/* $ADDON_HOME/
+if [ ! -f "$SUNDTEK_ADDON_HOME/sundtek.conf" ]; then
+  cp $SUNDTEK_ADDON_DIR/config/* $SUNDTEK_ADDON_HOME/
 else
   # in case of missing entries in addon home's sundtek.conf
-  entry_set="$(grep use_hwpidfilter $ADDON_HOME/sundtek.conf 2>/dev/null)"
+  entry_set="$(grep use_hwpidfilter $SUNDTEK_ADDON_HOME/sundtek.conf 2>/dev/null)"
   if [ -z "$entry_set" ]; then
-    sed -i 's|^device_attach=.*|# device_attach not used anymore\n\n# enable HW PID filter\nuse_hwpidfilter=off\n\n# enable listening on network\nenablenetwork=off|g' $ADDON_HOME/sundtek.conf
-    sed -i 's|^#first_adapter=.*|first_adapter=0|g' $ADDON_HOME/sundtek.conf
+    sed -i 's|^device_attach=.*|# device_attach not used anymore\n\n# enable HW PID filter\nuse_hwpidfilter=off\n\n# enable listening on network\nenablenetwork=off|g' $SUNDTEK_ADDON_HOME/sundtek.conf
+    sed -i 's|^#first_adapter=.*|first_adapter=0|g' $SUNDTEK_ADDON_HOME/sundtek.conf
 
-    sed -i 's|.*network tuner IP address (OpenELEC specific).*||g' $ADDON_HOME/sundtek.conf
-    sed -i 's|.*network_tuner_ip=.*||g' $ADDON_HOME/sundtek.conf
+    sed -i 's|.*network tuner IP address (OpenELEC specific).*||g' $SUNDTEK_ADDON_HOME/sundtek.conf
+    sed -i 's|.*network_tuner_ip=.*||g' $SUNDTEK_ADDON_HOME/sundtek.conf
   fi
 fi
 
-if [ ! -f "$ADDON_SETTINGS" ]; then
-  cp $ADDON_DIR/settings-default.xml $ADDON_SETTINGS
+if [ ! -f "$SUNDTEK_ADDON_SETTINGS" ]; then
+  cp $SUNDTEK_ADDON_DIR/settings-default.xml $SUNDTEK_ADDON_SETTINGS
 fi
 
+[ ! -f $SUNDTEK_ADDON_HOME/rc_key_enter.map ] && mv $SUNDTEK_ADDON_HOME/rc_key_enter $SUNDTEK_ADDON_HOME/rc_key_enter.map
+[ ! -f $SUNDTEK_ADDON_HOME/rc_key_ok.map ] && mv $SUNDTEK_ADDON_HOME/rc_key_ok $SUNDTEK_ADDON_HOME/rc_key_ok.map
+
 mkdir -p /var/config
-cat "$ADDON_SETTINGS" | awk -F\" '{print $2"=\""$4"\""}' | sed '/^=/d' > /var/config/sundtek-addon.conf
+cat "$SUNDTEK_ADDON_SETTINGS" | awk -F\" '{print $2"=\""$4"\""}' | sed '/^=/d' > /var/config/sundtek-addon.conf
 . /var/config/sundtek-addon.conf
 
-if [ "$AUTO_UPDATE" = "true" -a -f $ADDON_DIR/bin/mediasrv ]; then
+if [ "$AUTO_UPDATE" = "true" -a -f $SUNDTEK_ADDON_DIR/bin/mediasrv ]; then
   logger -t Sundtek "### Checking for new Sundtek binary installer ###"
-  touch $ADDON_HOME/driver-version.txt
+  touch $SUNDTEK_ADDON_HOME/driver-version.txt
   wget -O /tmp/sundtek-driver-version.txt http://sundtek.de/media/latest.phtml
   md5_1=$(md5sum -b /tmp/sundtek-driver-version.txt | awk '{print $1}')
-  md5_2=$(md5sum -b $ADDON_HOME/driver-version.txt | awk '{print $1}')
+  md5_2=$(md5sum -b $SUNDTEK_ADDON_HOME/driver-version.txt | awk '{print $1}')
   if [ "$md5_1" != "$md5_2" ]; then
     logger -t Sundtek "### Updating Sundtek binary installer ###"
-    rm -f $ADDON_DIR/bin/mediasrv
+    rm -f $SUNDTEK_ADDON_DIR/bin/mediasrv
   fi
 
   rm -f /tmp/sundtek-driver-version.txt
 fi
 
-if [ ! -f $ADDON_DIR/bin/mediasrv ]; then
+if [ ! -f $SUNDTEK_ADDON_DIR/bin/mediasrv ]; then
   # remove renamed addon if exist
   rm -fr "$HOME/.xbmc/addons/driver.dvb.sundtek"
   rm -fr "$HOME/userdata/addon_data/driver.dvb.sundtek"
 
   logger -t Sundtek "### Downloading installer ###"
-  cd $ADDON_DIR
+  cd $SUNDTEK_ADDON_DIR
   mkdir -p bin lib tmp
   cd tmp/
 
@@ -93,10 +108,10 @@ if [ ! -f $ADDON_DIR/bin/mediasrv ]; then
     INSTALLER_URL="http://sundtek.de/media/netinst/armsysvhf/installer.tar.gz"
 
     # enable HW PID filter on RPi by default
-    sed -i 's|^use_hwpidfilter=.*|use_hwpidfilter=on|g' $ADDON_DIR/config/sundtek.conf
-    sed -i 's|^use_hwpidfilter=.*|use_hwpidfilter=on|g' $ADDON_HOME/sundtek.conf
-    sed -i 's|.*id="ENABLE_HW_PID_FILTER".*|<setting id="ENABLE_HW_PID_FILTER" value="true" />|' $ADDON_DIR/settings-default.xml
-    sed -i 's|.*id="ENABLE_HW_PID_FILTER".*|<setting id="ENABLE_HW_PID_FILTER" value="true" />|' $ADDON_SETTINGS
+    sed -i 's|^use_hwpidfilter=.*|use_hwpidfilter=on|g' $SUNDTEK_ADDON_DIR/config/sundtek.conf
+    sed -i 's|^use_hwpidfilter=.*|use_hwpidfilter=on|g' $SUNDTEK_ADDON_HOME/sundtek.conf
+    sed -i 's|.*id="ENABLE_HW_PID_FILTER".*|<setting id="ENABLE_HW_PID_FILTER" value="true" />|' $SUNDTEK_ADDON_DIR/settings-default.xml
+    sed -i 's|.*id="ENABLE_HW_PID_FILTER".*|<setting id="ENABLE_HW_PID_FILTER" value="true" />|' $SUNDTEK_ADDON_SETTINGS
   else
     logger -t Sundtek "### Unsupported architecture ###"
     cd ..
@@ -117,21 +132,21 @@ if [ ! -f $ADDON_DIR/bin/mediasrv ]; then
 
   cp -Pa opt/bin/* ../bin/
   cp -Pa opt/lib/* ../lib/
-  cp ../driver-version.txt $ADDON_HOME/
+  cp ../driver-version.txt $SUNDTEK_ADDON_HOME/
   cd ..
   rm -fr tmp/
   logger -t Sundtek "### Installer finished ###"
 
-  cat "$ADDON_SETTINGS" | awk -F\" '{print $2"=\""$4"\""}' | sed '/^=/d' > /var/config/sundtek-addon.conf
+  cat "$SUNDTEK_ADDON_SETTINGS" | awk -F\" '{print $2"=\""$4"\""}' | sed '/^=/d' > /var/config/sundtek-addon.conf
   . /var/config/sundtek-addon.conf
 fi
 
-if [ ! -f $ADDON_HOME/driver-version.txt ]; then
-  cp $ADDON_DIR/driver-version.txt $ADDON_HOME/
+if [ ! -f $SUNDTEK_ADDON_HOME/driver-version.txt ]; then
+  cp $SUNDTEK_ADDON_DIR/driver-version.txt $SUNDTEK_ADDON_HOME/
 fi
 
 # enable to install same addon package version again
-rm -f /storage/.xbmc/addons/packages/driver.dvb.sundtek*
+#rm -f /storage/.xbmc/addons/packages/driver.dvb.sundtek*
 
 # add alias for /opt/bin/mediaclient
 alias_set="$(grep libmediaclient.so /storage/.profile 2>/dev/null)"
@@ -144,11 +159,11 @@ else
   sed -i 's|/driver.dvb.sundtek/|/driver.dvb.sundtek-mediatv/|g' /storage/.profile
 fi
 
-export LD_PRELOAD=$ADDON_DIR/lib/libmediaclient.so
+export LD_PRELOAD=$SUNDTEK_ADDON_DIR/lib/libmediaclient.so
 
-if [ "$ANALOG_TV" = "true" -a ! -f "$ADDON_DIR/bin/plugins/lib/libavcodec.so.54.12.100" ]; then
+if [ "$ANALOG_TV" = "true" -a ! -f "$SUNDTEK_ADDON_DIR/bin/plugins/lib/libavcodec.so.54.12.100" ]; then
   logger -t Sundtek "### Downloading missing ffmpeg libraries ###"
-  cd $ADDON_DIR/bin
+  cd $SUNDTEK_ADDON_DIR/bin
   mkdir -p plugins/
   cd plugins/
 
@@ -171,7 +186,7 @@ if [ -z "$(pidof mediasrv)" ]; then
   rm -f /var/log/mediaclient.log
 
   SUNDTEK_CONF_TMP=/tmp/sundtek.conf
-  cp $ADDON_HOME/sundtek.conf $SUNDTEK_CONF_TMP
+  cp $SUNDTEK_ADDON_HOME/sundtek.conf $SUNDTEK_CONF_TMP
 
   [ -z "$LOWEST_ADAPTER_NUM" ] && LOWEST_ADAPTER_NUM=0
   sed -i "s|^first_adapter=.*|first_adapter=$LOWEST_ADAPTER_NUM|g" $SUNDTEK_CONF_TMP
@@ -213,7 +228,7 @@ if [ -z "$(pidof mediasrv)" ]; then
     mv ${SUNDTEK_CONF_TMP}-net $SUNDTEK_CONF_TMP
     echo "" >>$SUNDTEK_CONF_TMP
     # remove empty lines at the end of file
-    sed -i '${/^$/d;}' $SUNDTEK_CONF_TMP
+    sed -i -e ':a' -e '/^\n*$/{$d;N;};/\n$/ba' $SUNDTEK_CONF_TMP
     # add entries
     echo -e "\n[NETWORK]" >>$SUNDTEK_CONF_TMP
     for dev in $(seq 0 $DEVICE1_NUM); do
@@ -245,7 +260,7 @@ if [ -z "$(pidof mediasrv)" ]; then
     mv ${SUNDTEK_CONF_TMP}-net $SUNDTEK_CONF_TMP
     echo "" >>$SUNDTEK_CONF_TMP
     # remove empty lines at the end of file
-    sed -i '${/^$/d;}' $SUNDTEK_CONF_TMP
+    sed -i -e ':a' -e '/^\n*$/{$d;N;};/\n$/ba' $SUNDTEK_CONF_TMP
   fi
 
   if [ "$ENABLE_TUNER_TYPES" = "true" ]; then
@@ -253,7 +268,7 @@ if [ -z "$(pidof mediasrv)" ]; then
     SERIALS=$(cat /var/config/sundtek-addon.conf | sed -n 's|^ATTACHED_TUNER_\(.*\)_DVBMODE=.*|\1|gp' | sort | uniq)
     . /var/config/sundtek-addon.conf
 
-    for SERIAL in ${SERIALS[@]}; do
+    for SERIAL in $SERIALS; do
       DVBMODE=$(eval echo \$ATTACHED_TUNER_${SERIAL}_DVBMODE)
       IRPROT=$(eval echo \$ATTACHED_TUNER_${SERIAL}_IRPROT)
       KEYMAP=$(eval echo \$ATTACHED_TUNER_${SERIAL}_KEYMAP)
@@ -267,15 +282,14 @@ if [ -z "$(pidof mediasrv)" ]; then
 
       [ "$IRPROT" = "NEC" -o "$IRPROT" = "auto" ] && IRPROT=""
 
-      KEYMAP_FILE="$ADDON_HOME/$KEYMAP"
-      [ ! -f $KEYMAP_FILE ] && KEYMAP_FILE=""
+      [ ! -f $KEYMAP ] && KEYMAP=""
 
       # remove setttings for this tuner
       awk -v val="[$SERIAL]" '$0 == val {flag=1; next} /^ir_protocol=|^rcmap=|^initial_dvb_mode=|^#|^$/{if (flag==1) next} /.*/{flag=0; print}' $SUNDTEK_CONF_TMP >${SUNDTEK_CONF_TMP}-types
       mv ${SUNDTEK_CONF_TMP}-types $SUNDTEK_CONF_TMP
       echo "" >>$SUNDTEK_CONF_TMP
       # remove empty lines at the end of file
-      sed -i '${/^$/d;}' $SUNDTEK_CONF_TMP
+      sed -i -e ':a' -e '/^\n*$/{$d;N;};/\n$/ba' $SUNDTEK_CONF_TMP
 
       ADDNEW=true
       if [ -n "$DVBMODE" ]; then
@@ -286,9 +300,9 @@ if [ -z "$(pidof mediasrv)" ]; then
         [ $ADDNEW = true ] && ADDNEW=false && echo -e "\n[$SERIAL]" >>$SUNDTEK_CONF_TMP
         echo "ir_protocol=$IRPROT" >>$SUNDTEK_CONF_TMP
       fi
-      if [ -n "$KEYMAP_FILE" ]; then
+      if [ -n "$KEYMAP" ]; then
         [ $ADDNEW = true ] && ADDNEW=false && echo -e "\n[$SERIAL]" >>$SUNDTEK_CONF_TMP
-        echo "rcmap=$KEYMAP_FILE" >>$SUNDTEK_CONF_TMP
+        echo "rcmap=$KEYMAP" >>$SUNDTEK_CONF_TMP
       fi
 
       echo "" >>$SUNDTEK_CONF_TMP
@@ -296,13 +310,13 @@ if [ -z "$(pidof mediasrv)" ]; then
   fi
 
   md5_1=$(md5sum -b $SUNDTEK_CONF_TMP | awk '{print $1}')
-  md5_2=$(md5sum -b $ADDON_HOME/sundtek.conf | awk '{print $1}')
+  md5_2=$(md5sum -b $SUNDTEK_ADDON_HOME/sundtek.conf | awk '{print $1}')
   if [ "$md5_1" != "$md5_2" ]; then
     # file changed - copy to addon home
-    cp $SUNDTEK_CONF_TMP $ADDON_HOME/sundtek.conf
+    cp $SUNDTEK_CONF_TMP $SUNDTEK_ADDON_HOME/sundtek.conf
   fi
 
-  mediasrv --wait-for-devices -p $ADDON_DIR/bin -c $ADDON_HOME/sundtek.conf -d
+  mediasrv --wait-for-devices -p $SUNDTEK_ADDON_DIR/bin -c $SUNDTEK_ADDON_HOME/sundtek.conf -d
 
   # wait few seconds
   [ -z "$SETTLE_TIME" ] && SETTLE_TIME=0
@@ -318,20 +332,23 @@ if [ -z "$(pidof mediasrv)" ]; then
     mediaclient --disable-dvb=/dev/dvb/adapter0
   fi
 
-  if [ "$RUN_USER_SCRIPT" = "true" -a -f "$ADDON_HOME/userscript.sh" ]; then
-    logger -t Sundtek "### Running user script $ADDON_HOME/userscript.sh ###"
-    cat $ADDON_HOME/userscript.sh | dos2unix >/var/run/sundtek-userscript.sh
+  if [ "$RUN_USER_SCRIPT" = "true" -a -f "$SUNDTEK_ADDON_HOME/userscript.sh" ]; then
+    logger -t Sundtek "### Running user script $SUNDTEK_ADDON_HOME/userscript.sh ###"
+    cat $SUNDTEK_ADDON_HOME/userscript.sh | dos2unix >/var/run/sundtek-userscript.sh
     sh /var/run/sundtek-userscript.sh
   fi
 (
   # save adapter serial number in background
   sleep 5
-  serial_number_old=$(cat $ADDON_HOME/adapters.txt 2>/dev/null)
+  serial_number_old=$(cat $SUNDTEK_ADDON_HOME/adapters.txt 2>/dev/null)
   serial_number_new=$(mediaclient -e | awk '/device / {print $0} /ID:/ {print $2}')
   if [ "$serial_number_old" != "$serial_number_new" ]; then
-    echo "$serial_number_new" >$ADDON_HOME/adapters.txt
+    echo "$serial_number_new" >$SUNDTEK_ADDON_HOME/adapters.txt
   fi
 )&
 fi
 
 logger -t Sundtek "### Sundtek ready ###"
+
+# unlock the lock
+unlock

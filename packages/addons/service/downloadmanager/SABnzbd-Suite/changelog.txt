@@ -1,3 +1,24 @@
+3.1.1
+- rebuild for OpenELEC-3.2
+
+3.0.9
+- update to CouchPotatoServe-5c0d8a7
+- update to Headphones-452cf15
+- remove CouchPotato (v1)
+
+3.0.8
+- update to CouchPotatoServe-f1dde5c
+- update to Headphones-ebbe908
+- update to SickBeard-fb37d33
+
+3.0.7
+- update to CouchPotatoServe-5a23be2
+- update to SickBeard-ebec1de
+- fix executehttpapi startup error
+
+3.0.6
+- fix configobj error n startup
+
 3.0.5
 - rebuild. configobj included
 

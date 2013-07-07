@@ -19,14 +19,14 @@
 ################################################################################
 
 PKG_NAME="freetype"
-PKG_VERSION="2.4.11"
+PKG_VERSION="2.5.0.1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.freetype.org"
 PKG_URL="http://download.savannah.gnu.org/releases/freetype/$PKG_NAME-$PKG_VERSION.tar.bz2"
 PKG_DEPENDS="zlib"
-PKG_BUILD_DEPENDS="toolchain zlib"
+PKG_BUILD_DEPENDS="toolchain zlib libpng"
 PKG_PRIORITY="optional"
 PKG_SECTION="print"
 PKG_SHORTDESC="freetype: TrueType font rendering library"
