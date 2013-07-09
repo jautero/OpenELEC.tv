@@ -26,9 +26,11 @@
 (
   progress "Starting Syslog daemon"
 
-  source /var/config/settings.conf
+  if [ -e /storage/.cache/syslog/remote ] ; then
+    source /storage/.cache/syslog/remote
+  fi
 
-  SYSLOGD_OPTIONS="-L -D"
+  SYSLOGD_OPTIONS="-L"
 
   if [ "$SYSLOG_REMOTE" == "true" -a "$SYSLOG_SERVER" ]; then
     SYSLOGD_OPTIONS="-R $SYSLOG_SERVER $SYSLOGD_OPTIONS"
@@ -39,6 +41,10 @@
   fi
 
   syslogd $SYSLOGD_OPTIONS
+
+  if [ "$SYSLOG_REMOTE" == "true" -a "$SYSLOG_SERVER" ]; then
+    sleep 3
+  fi
 
   progress "Starting Kernellog daemon"
     klogd

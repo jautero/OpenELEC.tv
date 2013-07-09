@@ -42,7 +42,12 @@ if [ -z "$1" ]; then
 fi
 
 DISK="$1"
-PART="${DISK}1"
+
+### If DISK ends with a number, add "p1" instead of "1" for the first partition
+case ${DISK#${DISK%?}} in
+    ([0-9]) PART="${DISK}p1";;
+    (*)     PART="${DISK}1";;
+esac
 
 clear
 echo "#########################################################"
@@ -232,8 +237,28 @@ EOF
   cp README.md /tmp/usb_install
   cp RELEASE /tmp/usb_install
 
-  cp 3rdparty/syslinux/vesamenu.c32 /tmp/usb_install
   cp splash.png /tmp/usb_install
+
+  if [ -f /usr/lib/syslinux/vesamenu.c32 ]; then
+    cp /usr/lib/syslinux/vesamenu.c32 /tmp/usb_install
+  elif [ -f /usr/share/syslinux/vesamenu.c32 ]; then
+    cp /usr/share/syslinux/vesamenu.c32 /tmp/usb_install
+  else
+    echo "ERROR: Can't find syslinux's vesamenu.c32 on Host OS" >&2
+    sed 's|^UI vesamenu.c32|#UI vesamenu.c32|g' /tmp/usb_install/syslinux.cfg
+  fi
+
+  if [ -f /usr/lib/syslinux/libcom32.c32 ]; then
+    cp /usr/lib/syslinux/libcom32.c32 /tmp/usb_install
+  elif [ -f /usr/share/syslinux/libcom32.c32 ]; then
+    cp /usr/share/syslinux/libcom32.c32 /tmp/usb_install
+  fi
+
+  if [ -f /usr/lib/syslinux/libutil.c32 ]; then
+    cp /usr/lib/syslinux/libutil.c32 /tmp/usb_install
+  elif [ -f /usr/share/syslinux/libutil.c32 ]; then
+    cp /usr/share/syslinux/libutil.c32 /tmp/usb_install
+  fi
 
 # sync disk
   echo "syncing disk..."
@@ -250,7 +275,7 @@ EOF
   elif [ -f /usr/share/syslinux/mbr.bin ]; then
     MBR="/usr/share/syslinux/mbr.bin"     # example: fedora
   else
-    echo "Can't find syslinux's mbr.bin on Host OS"
+    echo "ERROR: Can't find syslinux's mbr.bin on Host OS" >&2
   fi
 
   if [ -n "$MBR" ]; then

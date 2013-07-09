@@ -36,9 +36,6 @@ fi
 
 if [ "$OPENGLES_SUPPORT" = yes ]; then
   XBMC_OPENGLES="--enable-gles"
-  if [ "$OPENGLES" = "marvell-libgfx" ]; then
-    XBMC_PLATFORM_SUPPORT="--with-platform=marvell-dove"
-  fi
 else
   XBMC_OPENGLES="--disable-gles"
 fi
@@ -192,16 +189,25 @@ else
   XBMC_WEBSERVER="--disable-webserver"
 fi
 
-if [ "$OPENMAX_SUPPORT" = yes ]; then
+if [ "$XBMCPLAYER_DRIVER" = bcm2835-driver ]; then
   XBMC_OPENMAX="--enable-openmax"
-  if [ "$OPENMAX" = "bcm2835-driver" ]; then
-    XBMC_PLATFORM_SUPPORT="--with-platform=raspberry-pi"
-    XBMC_PLAYER="--enable-player=omxplayer"
-    BCM2835_INCLUDES="-I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads/ \
-                      -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux"
-    CFLAGS="$CFLAGS $BCM2835_INCLUDES"
-    CXXFLAGS="$CXXFLAGS $BCM2835_INCLUDES"
-  fi
+  XBMC_PLAYER="--enable-player=omxplayer"
+  XBMC_CODEC="--with-platform=raspberry-pi"
+  BCM2835_INCLUDES="-I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads/ \
+                    -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux"
+  CFLAGS="$CFLAGS $BCM2835_INCLUDES"
+  CXXFLAGS="$CXXFLAGS $BCM2835_INCLUDES"
+elif [ "$XBMCPLAYER_DRIVER" = "marvell-libgfx" ]; then
+  XBMC_OPENMAX="--disable-openmax"
+  XBMC_PLAYER="--with-platform=marvell-dove"
+  XBMC_CODEC=""
+elif [ "$XBMCPLAYER_DRIVER" = "libamlplayer-m1" -o "$XBMCPLAYER_DRIVER" = "libamlplayer-m3" ]; then
+  XBMC_OPENMAX="--disable-openmax"
+  XBMC_PLAYER="--enable-player=amlplayer"
+  XBMC_CODEC="--enable-codec=amcodec"
+  AMLPLAYER_INCLUDES="-I$SYSROOT_PREFIX/usr/include/amlplayer"
+  CFLAGS="$CFLAGS $AMLPLAYER_INCLUDES"
+  CXXFLAGS="$CXXFLAGS $AMLPLAYER_INCLUDES"
 else
   XBMC_OPENMAX="--disable-openmax"
 fi
@@ -230,11 +236,11 @@ else
   XBMC_CRYSTALHD="--disable-crystalhd"
 fi
 
-# xbmc fails to build with LTO optimization
-  strip_lto
+# xbmc fails to build with LTO optimization if build without GOLD support
+  [ ! "$GOLD_SUPPORT" = "yes" ] && strip_lto
 
-# dont use some optimizations because of build problems
-  LDFLAGS=`echo $LDFLAGS | sed -e "s|-Wl,--as-needed||"`
+# Todo: XBMC segfaults on exit when building with LTO support
+  strip_lto
 
 # dont build parallel
 # MAKEFLAGS=-j1
@@ -257,6 +263,7 @@ cd $PKG_BUILD
 # autoreconf
   BOOTSTRAP_STANDALONE=1 make -f bootstrap.mk
 
+export gl_cv_func_gettimeofday_clobber=no
 ./configure --host=$TARGET_NAME \
             --build=$HOST_NAME \
             --with-arch=$TARGET_ARCH \
@@ -314,7 +321,7 @@ cd $PKG_BUILD
             --enable-texturepacker --with-texturepacker-root="$ROOT/$TOOLCHAIN" \
             --disable-external-libraries \
             --enable-external-ffmpeg \
-            $XBMC_PLATFORM_SUPPORT \
+            $XBMC_CODEC \
             $XBMC_PLAYER \
 
 # setup default skin inside the sources

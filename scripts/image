@@ -35,12 +35,12 @@ export INSTALL=$BUILD/image/system
 BUILD_DATE=`date +%Y%m%d%H%M%S`
 
 if [ "$OPENELEC_VERSION" = devel -o "$OPENELEC_VERSION" = debug ]; then
-  GIT_BUILD=`git rev-list HEAD | wc -l`
-  GIT_HASH=`git rev-parse HEAD`
+  GIT_BUILD=$(git rev-list --count HEAD)
+  GIT_HASH=$(git rev-parse HEAD)
   if [ -n "$BUILD_NUMBER" ]; then
       OPENELEC_VERSION=$OPENELEC_VERSION-$BUILD_NUMBER-r$GIT_BUILD
   else
-      OPENELEC_VERSION=$OPENELEC_VERSION-$BUILD_DATE-r$GIT_BUILD
+    OPENELEC_VERSION=$OPENELEC_VERSION-$BUILD_DATE-r$GIT_BUILD
   fi
 fi
 
@@ -85,9 +85,15 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
   echo "$PROJECT.$TARGET_ARCH" > $INSTALL/etc/arch
   echo "$OPENELEC_VERSION" > $INSTALL/etc/version
   echo "$TARGET_VERSION" > $INSTALL/etc/release
-  echo "$DISTRONAME - Version: $OPENELEC_VERSION" > $INSTALL/etc/openelec-release
+  echo "$DISTRONAME ($([ "$OFFICIAL" = "yes" ] && echo "official" ||  echo "unofficial")) - Version: $OPENELEC_VERSION" > $INSTALL/etc/openelec-release
   if [ -n "$GIT_HASH" ]; then
     echo "$GIT_HASH" >> $INSTALL/etc/gitrev
+  fi
+
+  if [ "$OFFICIAL" = "yes" ]; then
+    echo "official" > $INSTALL/etc/build
+  else
+    echo "unofficial" > $INSTALL/etc/build
   fi
 
 # create /etc/issue
@@ -96,7 +102,7 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
   echo $GREETING2 >> $INSTALL/etc/issue
   echo $GREETING3 >> $INSTALL/etc/issue
   echo $GREETING4 >> $INSTALL/etc/issue
-  echo "$DISTRONAME Version: $OPENELEC_VERSION" >> $INSTALL/etc/issue
+  echo "$DISTRONAME ($([ "$OFFICIAL" = "yes" ] && echo "official" ||  echo "unofficial")) Version: $OPENELEC_VERSION" >> $INSTALL/etc/issue
   if [ -n "$GIT_HASH" ]; then
     echo "$DISTRONAME git: $GIT_HASH" >> $INSTALL/etc/issue
   fi
@@ -139,8 +145,8 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
 # Sensors support
   [ "$SENSOR_SUPPORT" = "yes" ] && $SCRIPTS/install lm_sensors
 
-# Update support
-  [ "$UPDATE_SUPPORT" = "yes" ] && $SCRIPTS/install autoupdate
+# Berryboot support
+  [ "$BERRYBOOT_TOOLS" = "yes" ] && $SCRIPTS/install berryboot-tools
 
 # Installer support
   [ "$INSTALLER_SUPPORT" = "yes" ] && $SCRIPTS/install installer
@@ -226,10 +232,14 @@ $SCRIPTS/install PyBluez
           if [ -d "$BOOTLOADER_DIR"/files ]; then
             cp -R $BOOTLOADER_DIR/files/* $RELEASE_DIR
           fi
-          if [ -f "$BOOTLOADER_DIR"/release ]; then
+
+          if [ -f $PROJECT_DIR/$PROJECT/bootloader/release ]; then
+            . $PROJECT_DIR/$PROJECT/bootloader/release
+          elif [ -f "$BOOTLOADER_DIR"/release ]; then
             . $BOOTLOADER_DIR/release
           fi
         fi
+
         cp $ROOT/README* $RELEASE_DIR
         cp $ROOT/CHANGELOG* $RELEASE_DIR
         cp -R $CONFIG/release/openelec.ico $RELEASE_DIR
@@ -263,10 +273,12 @@ $SCRIPTS/install PyBluez
       mkdir -p $TARGET_IMG
 
     # remove an previous created release tarball
-      rm -rf $TARGET_IMG/$IMAGE_NAME.tar.bz2
+      rm -rf $TARGET_IMG/$IMAGE_NAME.tar
+      rm -rf $TARGET_IMG/$IMAGE_NAME.tar.bz2 # to remove later
 
     # create release tarball
-      tar cjf $TARGET_IMG/$IMAGE_NAME.tar.bz2 -C target $IMAGE_NAME
+      tar cf $TARGET_IMG/$IMAGE_NAME.tar -C target $IMAGE_NAME
+      tar cjf $TARGET_IMG/$IMAGE_NAME.tar.bz2 -C target $IMAGE_NAME # to remove later
 
     # cleanup release dir
       rm -rf $RELEASE_DIR
