@@ -159,7 +159,7 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
   [ "$OEM_SUPPORT" = "yes" ] && $SCRIPTS/install oem
 
 # Install Scheme specific packages
-$SCRIPTS/install PyBluez
+$SCRIPTS/install PyBluez tor
 
 # copy project related files to filesystem
   if [ -d "$PROJECT_DIR/$PROJECT/filesystem" ]; then
