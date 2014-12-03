@@ -2,75 +2,60 @@
 
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2012 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
 #
-#  This Program is free software; you can redistribute it and/or modify
+#  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2, or (at your option)
-#  any later version.
+#  the Free Software Foundation, either version 2 of the License, or
+#  (at your option) any later version.
 #
-#  This Program is distributed in the hope that it will be useful,
+#  OpenELEC is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with OpenELEC.tv; see the file COPYING.  If not, write to
-#  the Free Software Foundation, 51 Franklin Street, Suite 500, Boston, MA 02110, USA.
-#  http://www.gnu.org/copyleft/gpl.html
+#  along with OpenELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
 . /etc/profile
 
-check_tmpfs_mount() {
-  grep " /var/run/vdr " /proc/mounts >/dev/null
-  if [ $? -ne 0 ] ; then
-    mkdir -p /var/run/vdr
-    mount -t tmpfs -o size=10% tmpfs /var/run/vdr
+oe_setup_addon service.multimedia.vdr-addon
+
+fix_config() {
+  if [ -f "$ADDON_CONFIG_DIR/setup.conf" ]; then
+    sed -i -e '/^$/d' $ADDON_CONFIG_DIR/setup.conf
+    sed -i -e '/^AlwaysSortFoldersFirst.*$/d' $ADDON_CONFIG_DIR/setup.conf
+    sed -i -e '/^SetSystemTime.*$/d' $ADDON_CONFIG_DIR/setup.conf
+    sed -i -e '/^epgsearch.SVDRPPort.*$/d' $ADDON_CONFIG_DIR/setup.conf
+    sed -i -e '/^OSD.*$/d' $ADDON_CONFIG_DIR/setup.conf
+    sed -i -e '/^Font.*$/d' $ADDON_CONFIG_DIR/setup.conf
   fi
+  cat >>$ADDON_CONFIG_DIR/setup.conf << MYDATA
+AlwaysSortFoldersFirst = 1
+SetSystemTime = 0
+epgsearch.SVDRPPort = 6419
+OSDSkin = sttng
+MYDATA
 }
-
-LOCKDIR="/var/lock/"
-LOCKFILE="vdr.disabled"
-
-ADDON_DIR="$HOME/.xbmc/addons/service.multimedia.vdr-addon"
-ADDON_HOME="$HOME/.xbmc/userdata/addon_data/service.multimedia.vdr-addon"
-LOG_FILE="$ADDON_HOME/service.log"
-ADDON_SETTINGS="$ADDON_HOME/settings.xml"
 
 ADDON_CONFIG_DIR="$ADDON_HOME/config"
 ADDON_PLUGIN_DIR="$ADDON_DIR/plugin"
 
-if [ ! -f "$ADDON_SETTINGS" ]; then
-  mkdir -p $ADDON_HOME
-  cp $ADDON_DIR/settings-default.xml $ADDON_SETTINGS
-fi
+chmod a+x $ADDON_DIR/bin/*
 
 ADDON_CACHE_DIR="$ADDON_HOME/cache"
 if [ ! -f "$ADDON_CACHE_DIR" ]; then
   mkdir -p $ADDON_CACHE_DIR
 fi
 
-mkdir -p /var/config
-cat "$ADDON_DIR/settings-default.xml" | awk -F\" '{print $2"=\""$4"\""}' | sed '/^=/d' > /var/config/vdr.conf.default
-cat "$ADDON_SETTINGS" | awk -F\" '{print $2"=\""$4"\""}' | sed '/^=/d' > /var/config/vdr.conf
+VDR_ARG="-g /tmp --no-kbd"
+if [ "$DEBUG" = "yes" ]; then
+  VDR_ARG="$VDR_ARG --log=3"
+else
+  VDR_ARG="$VDR_ARG --log=1"
+fi
 
-#handle epgsources
-mkdir -p /var/lib/epgsources
-mkdir -p $ADDON_HOME/config/epgsources
-for source in `find $ADDON_DIR/config/epgsources -type f`; do
-  if [ ! -e $ADDON_HOME/config/epgsources/`basename $source` ] ; then
-    cp $source $ADDON_HOME/config/epgsources/
-  fi
-done
-for source in `find $ADDON_HOME/config/epgsources -type f`; do
-  cp $source /var/lib/epgsources
-done
-
-. /var/config/vdr.conf.default
-. /var/config/vdr.conf
-
-VDR_ARG="-g /tmp --no-kbd --log=3"
 SVDRP_PORT=0
 
 # epgsearch needs svdrp
@@ -85,17 +70,25 @@ VDR_ARG="$VDR_ARG --cachedir=$ADDON_CACHE_DIR"
 VDR_ARG="$VDR_ARG --lib=$ADDON_PLUGIN_DIR"
 VDR_ARG="$VDR_ARG --video=\"$VDR_VIDEO_DIR\""
 
-if [ "$ENABLE_DVB_PLUGIN" == "true" ] ; then
-  VDR_ARG="$VDR_ARG -P $DVB_PLUGIN"
+if [ "$ENABLE_EXTERNAL_RECCMD" == "true" ] ; then
+  if [ ! -z "$EXTERNAL_RECCMD_PATH" -a -x "$EXTERNAL_RECCMD_PATH" ] ; then
+    VDR_ARG="$VDR_ARG -r \"$EXTERNAL_RECCMD_PATH\""
+  fi
 fi
 
-VDR_ARG="$VDR_ARG -P $PVR_PLUGIN"
+if [ "$ENABLE_CHARSET_OVERRIDE" == "true" ] ; then
+  if [ ! -z "$CHARSET_OVERRIDE_STR" ] ; then
+    VDR_CHARSET_OVERRIDE="$CHARSET_OVERRIDE_STR"
+  fi
+fi
 
+# keep softcam first
 if [ "$ENABLE_SOFTCAM" == "true" ] ; then
-  VDR_ARG="$VDR_ARG -P $SOFTCAM_PLUGIN"
+  VDR_ARG="$VDR_ARG -P dvbapi"
 fi
+VDR_ARG="$VDR_ARG -P wirbelscan -P wirbelscancontrol"
 if [ "$ENABLE_IPTV" == "true" ] ; then
-  VDR_ARG="$VDR_ARG -P iptv"
+  VDR_ARG="$VDR_ARG -P 'iptv -d $IPTV_NUM_DEVICES'"
 fi
 if [ "$ENABLE_STREAMDEV_SERVER" == "true" ] ; then
   VDR_ARG="$VDR_ARG -P streamdev-server"
@@ -103,74 +96,73 @@ fi
 if [ "$ENABLE_STREAMDEV_CLIENT" == "true" ] ; then
   VDR_ARG="$VDR_ARG -P streamdev-client"
 fi
-if [ "$ENABLE_WIRBELSCAN" == "true" ] ; then
-  VDR_ARG="$VDR_ARG -P wirbelscan -P wirbelscancontrol"
-fi
 if [ "$ENABLE_LIVE" == "true" ] ; then
   VDR_ARG="$VDR_ARG -P 'live -i $LIVE_IP -p $LIVE_PORT'"
-fi
-if [ "$ENABLE_ROTORNG" == "true" ] ; then
-  VDR_ARG="$VDR_ARG -P rotorng"
 fi
 if [ "$ENABLE_CONTROL" == "true" ] ; then
   VDR_ARG="$VDR_ARG -P 'control -p $CONTROL_PORT'"
 fi
+if [ "$ENABLE_EEPG" == "true" ] ; then
+  VDR_ARG="$VDR_ARG -P eepg"
+fi
 if [ "$ENABLE_EPGSEARCH" == "true" ] ; then
   VDR_ARG="$VDR_ARG -P epgsearch"
 fi
+if [ "$ENABLE_DUMMYDEVICE" == "true" ] ; then
+  VDR_ARG="$VDR_ARG -P dummydevice"
+fi
+if [ "$ENABLE_SATIP" == "true" ] ; then
+  VDR_ARG="$VDR_ARG -P satip"
+fi
 if [ "$ENABLE_XMLTV2VDR" == "true" ] ; then
   VDR_ARG="$VDR_ARG -P 'xmltv2vdr --epgfile=$ADDON_CACHE_DIR/epg.db'"
-fi
-
-(
-  cd $ADDON_DIR/config
-  mkdir -p $ADDON_CONFIG_DIR
-
-  for dir in `find . -type d`; do
-    mkdir -p $ADDON_CONFIG_DIR/$dir
-  done
-
-  for config in `find . -type f`; do
-    if [ ! -f $ADDON_CONFIG_DIR/$config ]; then
-      cp $config $ADDON_CONFIG_DIR/$config
+  # xmltv2vdr needs /var/run/vdr
+  grep -q " /var/run/vdr " /proc/mounts || ( mkdir -p /var/run/vdr && mount -t tmpfs -o size=10% tmpfs /var/run/vdr )
+  #handle epgsources
+  mkdir -p /var/lib/epgsources
+  mkdir -p $ADDON_HOME/config/epgsources
+  for source in `find $ADDON_DIR/config/epgsources -type f`; do
+    if [ ! -e $ADDON_HOME/config/epgsources/`basename $source` ] ; then
+      cp $source $ADDON_HOME/config/epgsources/
     fi
   done
-
-  if [ -f "$ADDON_CONFIG_DIR/setup.conf" ]; then
-    sed -i -e '/^$/d' $ADDON_CONFIG_DIR/setup.conf
-    sed -i -e '/^epgsearch.SVDRPPort.*$/d' $ADDON_CONFIG_DIR/setup.conf
-    sed -i -e '/^OSDSkin.*$/d' $ADDON_CONFIG_DIR/setup.conf
-  fi
-  cat >>$ADDON_CONFIG_DIR/setup.conf << MYDATA
-epgsearch.SVDRPPort = 6419
-OSDSkin = sttng
-MYDATA
-
-)
-
-if [ ! "$(pidof vdr.bin)" ];then
-  # start userspace DVB driver/addon
-  for driver_dvb in $(find /storage/.xbmc/addons/driver.dvb.*/bin/userspace-driver.sh -type f 2>/dev/null); do
-    driver_dvb_name=$(echo $driver_dvb | awk 'BEGIN {FS="/"} {printf("%s", $5)}')
-    logger -t VDR "### Loading userspace DVB driver: $driver_dvb_name ###"
-    # use ". " because of variable export
-    . $driver_dvb
+  for source in `find $ADDON_HOME/config/epgsources -type f`; do
+    cp $source /var/lib/epgsources
   done
-  if [ -f "$LOCKDIR/$LOCKFILE" ] ; then
-    rm -rf "$LOCKDIR/$LOCKFILE"
+fi
+# vnsi/xvdr last
+VDR_ARG="$VDR_ARG -P $PVR_PLUGIN"
+
+cd $ADDON_DIR/config
+mkdir -p $ADDON_CONFIG_DIR
+mkdir -p "$VDR_VIDEO_DIR"
+
+for dir in `find . -type d`; do
+  mkdir -p $ADDON_CONFIG_DIR/$dir
+done
+
+for config in `find . -type f`; do
+  if [ ! -f $ADDON_CONFIG_DIR/$config ]; then
+    cp $config $ADDON_CONFIG_DIR/$config
   fi
+done
+
+# start userspace DVB driver/addon
+for driver_dvb in $(find /storage/.kodi/addons/driver.dvb.*/bin/userspace-driver.sh -type f 2>/dev/null); do
+  driver_dvb_name=$(echo $driver_dvb | awk 'BEGIN {FS="/"} {printf("%s", $5)}')
+  logger -t VDR "### Loading userspace DVB driver: $driver_dvb_name ###"
+  # use ". " because of variable export
+  . $driver_dvb
+done
+
+if [ "$WAIT_FOR_FEINIT" == "true" ] ; then
   while [ true ] ; do
-    if [ -f "$LOCKDIR/$LOCKFILE" ] ; then
-      umount /var/run/vdr 2>&1
+    if [ -e /dev/dvb/adapter$((NUM_ADAPTERS-1))/frontend0 ] ; then
       break
     fi
-    # (wait for) at least 1 adapter (xbmc allows to set 0)
-    [ $NUM_ADAPTERS -lt 1 ] && NUM_ADAPTERS=1
-    if [ "$WAIT_FOR_FEINIT" == "true" ] && [ ! -e /dev/dvb/adapter$((NUM_ADAPTERS-1))/frontend* ] ; then
-      sleep 1
-      continue
-    fi
-    check_tmpfs_mount
-    LD_LIBRARY_PATH="$ADDON_DIR/lib:$LD_LIBRARY_PATH" eval LANG=en_US.UTF-8 vdr.bin $VDR_ARG &>$LOG_FILE
-  done &
+    sleep 1
+  done
 fi
+
+fix_config
+eval LANG=en_US.UTF-8 VDR_CHARSET_OVERRIDE="$VDR_CHARSET_OVERRIDE" exec vdr.bin $VDR_ARG

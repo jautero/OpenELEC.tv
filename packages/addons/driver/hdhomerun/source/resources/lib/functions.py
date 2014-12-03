@@ -2,29 +2,29 @@
 #      This file is part of OpenELEC - http://www.openelec.tv
 #      Copyright (C) 2009-2013 Stephan Raue (stephan@openelec.tv)
 #
-#  This Program is free software; you can redistribute it and/or modify
+#  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2, or (at your option)
-#  any later version.
+#  the Free Software Foundation, either version 2 of the License, or
+#  (at your option) any later version.
 #
-#  This Program is distributed in the hope that it will be useful,
+#  OpenELEC is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with OpenELEC.tv; see the file COPYING.  If not, write to
-#  the Free Software Foundation, 51 Franklin Street, Suite 500, Boston, MA 02110, USA.
-#  http://www.gnu.org/copyleft/gpl.html
+#  along with OpenELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
 import os
 import sys
+import re
+import subprocess
 import shutil
 import xmlpp
 from xml.dom import minidom
 
-__sundtek_userspace__ = '/storage/.xbmc/userdata/addon_data/driver.dvb.sundtek-mediatv/'
+__sundtek_userspace__ = '/storage/.kodi/userdata/addon_data/driver.dvb.sundtek-mediatv/'
 
 ######################################################################################################
 # backup setting.xml file only if backup doesn't exist
@@ -44,25 +44,28 @@ def settings_restore(settings_xml):
 
 ######################################################################################################
 # get hdhomerun supported devices on a system (only name like 101ADD2B-0)
-def get_devices_hdhomerun(hdhomerun_log):
+def get_devices_hdhomerun():
   tuners = []
   try:
-    for line in open(hdhomerun_log, 'r'):
-      line = line.strip()
-      if line.startswith('Registered tuner'):
-        name = line.split(':');
-        name = name[2].strip()
-        tuners.append(name)
+    p = os.popen("hdhomerun_config discover", "r")
+    while 1:
+      line = p.readline()
+      if not line:
+        break
+      else:
+        str = line.strip()
+        match = re.search(r'hdhomerun device (.+) found at .+', line)
+        if match:
+          name = match.group(1)
+          print name
+          tuners.append(name)
   except IOError:
-    print 'Error reading hdhomerun log file', hdhomerun_log
+    print 'Error getting hdhomerun tuners info'
   return tuners
 
   """
-root ~ # grep "Registered tuner" /var/log/dvbhdhomerun.log
-Registered tuner, id from kernel: 0 name: 101ADD2B-0
-Registered tuner, id from kernel: 1 name: 101ADD2B-1
-Registered tuner, id from kernel: 2 name: 1031D75A-0
-Registered tuner, id from kernel: 3 name: 1031D75A-1
+openelec:~ # hdhomerun_config discover
+hdhomerun device 12345678 found at 192.168.0.3
   """
 
 ######################################################################################################
@@ -152,11 +155,13 @@ def remove_old_tuners(xmldoc):
 # add new hdhomerun tuners
 def add_hdhomerun(xmldoc, node_cat, tuners):
   for ix, tuner in enumerate(tuners):
-    tuner_var = tuner.replace('-', '_')
+    #tuner_var = tuner.replace('-', '_')
+    tuner_var = tuner
+    print tuner
 
     node1 = xmldoc.createElement("setting")
     node1.setAttribute("id", 'ATTACHED_TUNER_' + tuner_var + '_DVBMODE')
-    node1.setAttribute("label", tuner)
+    node1.setAttribute("label", "tuner serial " + tuner_var)
     node1.setAttribute("type", 'labelenum')
     node1.setAttribute("default", 'auto')
     node1.setAttribute("values", 'auto|ATSC|DVB-C|DVB-T')
@@ -170,11 +175,19 @@ def add_hdhomerun(xmldoc, node_cat, tuners):
     node_cat.appendChild(node2)
 
     node3 = xmldoc.createElement("setting")
-    node3.setAttribute("id", 'ATTACHED_TUNER_' + tuner_var + '_DISABLE')
-    node3.setAttribute("label", '9030')
-    node3.setAttribute("type", 'bool')
-    node3.setAttribute("default", 'false')
+    node3.setAttribute("id", 'ATTACHED_TUNER_' + tuner_var + '_NUMBERS')
+    node3.setAttribute("label", '9025')
+    node3.setAttribute("type", 'labelenum')
+    node3.setAttribute("default", '2')
+    node3.setAttribute("values", '1|2|3|4|5|6|7|8')
     node_cat.appendChild(node3)
+
+    node4 = xmldoc.createElement("setting")
+    node4.setAttribute("id", 'ATTACHED_TUNER_' + tuner_var + '_DISABLE')
+    node4.setAttribute("label", '9030')
+    node4.setAttribute("type", 'bool')
+    node4.setAttribute("default", 'false')
+    node_cat.appendChild(node4)
 
   # for tuner
 
@@ -247,9 +260,9 @@ def save_settings(settings_xml, xmldoc):
 
 ######################################################################################################
 # refresh hdhomerun tuners in settings.xml file
-def refresh_hdhomerun_tuners(settings_xml, hdhomerun_log):
+def refresh_hdhomerun_tuners(settings_xml):
   settings_backup(settings_xml)
-  tuners = get_devices_hdhomerun(hdhomerun_log)
+  tuners = get_devices_hdhomerun()
   xmldoc = parse_settings(settings_xml)
   if xmldoc == None:
     print 'No hdhomerun tuners found'

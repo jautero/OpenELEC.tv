@@ -1,14 +1,18 @@
-## Questions about OpenELEC?
+### Questions about OpenELEC?
 
-To get your questions answered, please ask in the OpenELEC [Forum] or on IRC: #openelec on freenode.net or [webchat] 
+To get your questions answered, please ask in the OpenELEC [Forum], on IRC: 
+\#openelec on freenode.net, or [webchat]. 
 
 Do not open an issue.
 
-## Issue Reports
+### Issue Reports
 
-If you are at all unsure whether it's a bug in OpenELEC or a problem with something
-else, post in the OpenELEC [Forum] instead. If it turns out that it is a bug, an issue
-can always bee opend later.
+**BEFORE you report a bug make sure you got the latest testing version of 
+OpenELEC. Your bug might be already fixed.**
+
+If you are at all unsure whether it's a bug in OpenELEC or a problem with 
+something else, post in the OpenELEC [Forum] instead. If it turns out that it is
+a bug, an issue can always be opened later.
 
 If you are sure that it's a bug in OpenELEC and you have not found a [similar issue], open a new [issue]
 and try to answer the following questions:
@@ -16,21 +20,29 @@ and try to answer the following questions:
 - What did you expect to happen?
 - What happened instead?
 
-It is also importent to provide logs for debugging.
-A zip file can be found in the [logfiles] samba share, this will contain all the logs needed.
+**It is also importent to provide logs for debugging.
+A zip file can be found in the [logfiles] samba share, this will contain all the logs needed.**
 
 Make sure to specify which version of OpenELEC you are using.
 - OpenELEC version
 - OpenELEC build
 - OpenELEC arch
 
-Please don't paste log messages in the issue reports or issue comments use [sprunge.us](http://sprunge.us) instead
+Please don't paste log messages in the issue reports or issue comments - use 
+[sprunge.us](http://sprunge.us) instead.
 
 Feature requests are great, but they usually end up lying around the issue
 tracker indefinitely. Sending a pull request is a much better way of getting a
 particular feature into OpenELEC.
 
-## Pull Requests
+### Reporting build failures
+
+As buildsystem / core packages (toolchain) / random libraries change from time to time, it is required
+that you always do a clean build (make clean) before reporting build failures. Also make sure that you
+have a clean, unmodified git clone, we can't fix bugs caused by you failed to merge / rebase on
+your own fork.
+
+### Pull Requests
 
 - **Create topic branches**. Don't ask us to pull from your master branch.
 

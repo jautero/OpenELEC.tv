@@ -2,22 +2,20 @@
 
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2012 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
 #
-#  This Program is free software; you can redistribute it and/or modify
+#  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2, or (at your option)
-#  any later version.
+#  the Free Software Foundation, either version 2 of the License, or
+#  (at your option) any later version.
 #
-#  This Program is distributed in the hope that it will be useful,
+#  OpenELEC is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with OpenELEC.tv; see the file COPYING.  If not, write to
-#  the Free Software Foundation, 51 Franklin Street, Suite 500, Boston, MA 02110, USA.
-#  http://www.gnu.org/copyleft/gpl.html
+#  along with OpenELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
 . config/options $1
@@ -25,18 +23,12 @@
 mkdir -p $RELEASE_DIR/3rdparty/syslinux
   cp -PR $BUILD/syslinux-*/NEWS $RELEASE_DIR/3rdparty/syslinux
   cp -PR $BUILD/syslinux-*/README $RELEASE_DIR/3rdparty/syslinux
-  cp -PR $BUILD/syslinux-*/com32/menu/vesamenu.c32 $RELEASE_DIR/3rdparty/syslinux
-  cp -PR $BUILD/syslinux-*/com32/lib/libcom32.c32 $RELEASE_DIR/3rdparty/syslinux
-  cp -PR $BUILD/syslinux-*/com32/libutil/libutil.c32 $RELEASE_DIR/3rdparty/syslinux
 
 mkdir -p $RELEASE_DIR/3rdparty/syslinux/doc
   cp -PR $BUILD/syslinux-*/doc/* $RELEASE_DIR/3rdparty/syslinux/doc
 
-mkdir -p $RELEASE_DIR/3rdparty/syslinux/dos
-  cp -PR $BUILD/syslinux-*/dos/syslinux.com $RELEASE_DIR/3rdparty/syslinux/dos
-
 mkdir -p $RELEASE_DIR/3rdparty/syslinux/win32
-  cp -PR $BUILD/syslinux-*/win32/syslinux.exe $RELEASE_DIR/3rdparty/syslinux/win32
+  cp -PR $BUILD/syslinux-*/bios/win32/syslinux.exe $RELEASE_DIR/3rdparty/syslinux/win32
 
 mkdir -p $RELEASE_DIR/3rdparty/syslinux/win64
-  cp -PR $BUILD/syslinux-*/win64/syslinux64.exe $RELEASE_DIR/3rdparty/syslinux/win64
+  cp -PR $BUILD/syslinux-*/bios/win64/syslinux64.exe $RELEASE_DIR/3rdparty/syslinux/win64
