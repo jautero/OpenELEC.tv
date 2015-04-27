@@ -17,9 +17,9 @@
 ################################################################################
 
 PKG_NAME="xf86-video-intel"
-PKG_VERSION="2.99.916"
+PKG_VERSION="2.99.910"
 PKG_REV="1"
-PKG_ARCH="i386 x86_64"
+PKG_ARCH="x86_64"
 PKG_LICENSE="OSS"
 PKG_SITE="http://intellinuxgraphics.org/"
 PKG_URL="http://xorg.freedesktop.org/archive/individual/driver/$PKG_NAME-$PKG_VERSION.tar.bz2"
@@ -46,7 +46,7 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-backlight \
                            --enable-sna \
                            --enable-uxa \
                            --disable-xvmc \
-                           --enable-glamor \
+                           --disable-glamor \
                            --disable-xaa \
                            --disable-dga \
                            --disable-tear-free \
@@ -57,7 +57,7 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-backlight \
                            --with-xorg-module-dir=$XORG_PATH_MODULES"
 
 pre_configure_target() {
-# TODO: xf86-video-intel-2.21.5 dont link with LTO enabled
+# xf86-video-intel is broken enough. dont link with LTO
   strip_lto
 }
 
