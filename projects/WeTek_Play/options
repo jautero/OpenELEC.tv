@@ -90,7 +90,7 @@
   # OpenGL(X) implementation to use (no / mesa)
     OPENGL="no"
 
-  # OpenGL-ES implementation to use (no / bcm2835-driver / gpu-viv-bin-mx6q / opengl-meson6)
+  # OpenGL-ES implementation to use (no / bcm2835-driver / imx-gpu-viv / opengl-meson6)
     OPENGLES="opengl-meson6"
 
   # include uvesafb support (yes / no)
@@ -109,6 +109,9 @@
 
   # KODI Player implementation to use (default / bcm2835-driver / libfslvpuwrap / libamcodec)
     KODIPLAYER_DRIVER="libamcodec"
+
+  # KODI DCADEC support (yes / no)
+    DCADEC_SUPPORT="yes"
 
   # Modules to install in initramfs for early boot
     INITRAMFS_MODULES=""

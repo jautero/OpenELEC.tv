@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="kodi"
-PKG_VERSION="15.0-beta1-7dacc6e"
+PKG_VERSION="15.0-beta2-45c2a2d"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
@@ -195,7 +195,6 @@ if [ ! "$KODIPLAYER_DRIVER" = default ]; then
     KODI_CXXFLAGS="$KODI_CXXFLAGS $BCM2835_INCLUDES"
   elif [ "$KODIPLAYER_DRIVER" = libfslvpuwrap ]; then
     KODI_CODEC="--enable-codec=imxvpu"
-    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET gpu-viv-g2d"
   elif [ "$KODIPLAYER_DRIVER" = libamcodec ]; then
     KODI_CODEC="--enable-codec=amcodec"
   else
@@ -340,6 +339,9 @@ post_makeinstall_target() {
   rm -rf $INSTALL/usr/bin/xbmc
   rm -rf $INSTALL/usr/bin/xbmc-standalone
   rm -rf $INSTALL/usr/lib/kodi/*.cmake
+
+  # fix binaryaddons multiarch build meh
+  cp -P project/cmake/scripts/linux/UseMultiArch.cmake $SYSROOT_PREFIX/usr/lib/kodi
 
   mkdir -p $INSTALL/usr/lib/kodi
     cp $PKG_DIR/scripts/kodi-config $INSTALL/usr/lib/kodi
