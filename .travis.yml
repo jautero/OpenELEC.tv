@@ -2,5 +2,5 @@ language: c
 compiler: gcc
 env:
     - PROJECT=RPi2 ARCH=arm
-install: sudo apt-get install libxml-parser-perl
+install: sudo apt-get install libxml-parser-perl gperf makeinfo xsltproc
 script: make image
