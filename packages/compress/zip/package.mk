@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -34,12 +34,7 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 make_target() {
-  make CC=$TARGET_CC \
-       CPP=${TARGET_PREFIX}cpp \
-       RANLIB=$TARGET_RANLIB \
-       AR=$TARGET_AR \
-       STRIP=$TARGET_STRIP \
-       LOCAL_ZIP="$TARGET_CFLAGS" \
+  make CC=$CC CPP=$CPP RANLIB=$RANLIB AR=$AR STRIP=$STRIP LOCAL_ZIP="$CFLAGS" \
        -f unix/Makefile generic
 }
 

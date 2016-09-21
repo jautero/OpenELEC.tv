@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.kernel.org"
 PKG_DEPENDS_HOST="ccache:host"
-PKG_DEPENDS_TARGET="toolchain cpio:host kmod:host pciutils xz:host wireless-regdb keyutils"
-PKG_DEPENDS_INIT="toolchain"
+PKG_DEPENDS_TARGET="toolchain cpio:host kmod:host pciutils xz:host wireless-regdb keyutils irqbalance"
+PKG_DEPENDS_INIT="toolchain cpu-firmware:init"
 PKG_NEED_UNPACK="$LINUX_DEPENDS"
 PKG_PRIORITY="optional"
 PKG_SECTION="linux"
@@ -31,29 +31,34 @@ PKG_SHORTDESC="linux26: The Linux kernel 2.6 precompiled kernel binary image and
 PKG_LONGDESC="This package contains a precompiled kernel image and the modules."
 case "$LINUX" in
   amlogic)
-    PKG_VERSION="amlogic-3.10-a9cef51"
-    PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+    PKG_VERSION="8b1bb2b"
+    PKG_GIT_URL="https://github.com/codesnake/linux.git"
+    PKG_GIT_BRANCH="amlogic-3.10.y"
     ;;
   imx6)
-    PKG_VERSION="cuboxi-3.14-ea83bda"
-    PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+    PKG_VERSION="4386797"
+    PKG_GIT_URL="https://github.com/SolidRun/linux-fslc.git"
+    PKG_GIT_BRANCH="3.14-1.0.x-mx6-sr"
     PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET imx6-status-led imx6-soc-fan"
     ;;
+  rpi)
+    PKG_VERSION="447249f"
+    PKG_GIT_URL="https://github.com/OpenELEC/linux.git"
+    PKG_GIT_BRANCH="raspberry-rpi-4.8.y"
+    ;;
   *)
-    PKG_VERSION="4.0.4"
-    PKG_URL="http://www.kernel.org/pub/linux/kernel/v4.x/$PKG_NAME-$PKG_VERSION.tar.xz"
+    PKG_VERSION="4.8-rc6"
+    PKG_URL="http://www.kernel.org/pub/linux/kernel/v4.x/testing/$PKG_NAME-$PKG_VERSION.tar.xz"
     ;;
 esac
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-PKG_MAKE_OPTS_HOST="ARCH=$TARGET_ARCH headers_check"
+PKG_MAKE_OPTS_HOST="ARCH=$TARGET_KERNEL_ARCH headers_check"
 
-if [ "$BOOTLOADER" = "u-boot" ]; then
-  KERNEL_IMAGE="$KERNEL_UBOOT_TARGET"
-else
-  KERNEL_IMAGE="bzImage"
+if [ "$BUILD_ANDROID_BOOTIMG" = "yes" ]; then
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET mkbootimg:host"
 fi
 
 post_patch() {
@@ -63,22 +68,19 @@ post_patch() {
     KERNEL_CFG_FILE=$PKG_DIR/config/$PKG_NAME.$TARGET_ARCH.conf
   fi
 
-  sed -i -e "s|^HOSTCC[[:space:]]*=.*$|HOSTCC = $HOST_CC|" \
-         -e "s|^HOSTCXX[[:space:]]*=.*$|HOSTCXX = $HOST_CXX|" \
-         -e "s|^ARCH[[:space:]]*?=.*$|ARCH = $TARGET_ARCH|" \
+  sed -i -e "s|^HOSTCC[[:space:]]*=.*$|HOSTCC = $ROOT/$TOOLCHAIN/bin/host-gcc|" \
+         -e "s|^HOSTCXX[[:space:]]*=.*$|HOSTCXX = $ROOT/$TOOLCHAIN/bin/host-g++|" \
+         -e "s|^ARCH[[:space:]]*?=.*$|ARCH = $TARGET_KERNEL_ARCH|" \
          -e "s|^CROSS_COMPILE[[:space:]]*?=.*$|CROSS_COMPILE = $TARGET_PREFIX|" \
          $PKG_BUILD/Makefile
 
   cp $KERNEL_CFG_FILE $PKG_BUILD/.config
-  sed -i -e "s|^CONFIG_INITRAMFS_SOURCE=.*$|CONFIG_INITRAMFS_SOURCE=\"$ROOT/$BUILD/image/initramfs.cpio\"|" $PKG_BUILD/.config
+  if [ ! "$BUILD_ANDROID_BOOTIMG" = "yes" ]; then
+    sed -i -e "s|^CONFIG_INITRAMFS_SOURCE=.*$|CONFIG_INITRAMFS_SOURCE=\"$ROOT/$BUILD/image/initramfs.cpio\"|" $PKG_BUILD/.config
+  fi
 
   # set default hostname based on $DISTRONAME
     sed -i -e "s|@DISTRONAME@|$DISTRONAME|g" $PKG_BUILD/.config
-
-  # disable PPP support if not enabled
-  if [ ! "$PPTP_SUPPORT" = yes ]; then
-    sed -i -e "s|^CONFIG_PPP=.*$|# CONFIG_PPP is not set|" $PKG_BUILD/.config
-  fi
 
   # disable swap support if not enabled
   if [ ! "$SWAP_SUPPORT" = yes ]; then
@@ -111,7 +113,7 @@ post_patch() {
 }
 
 makeinstall_host() {
-  make ARCH=$TARGET_ARCH INSTALL_HDR_PATH=dest headers_install
+  make ARCH=$TARGET_KERNEL_ARCH INSTALL_HDR_PATH=dest headers_install
   mkdir -p $SYSROOT_PREFIX/usr/include
     cp -R dest/include/* $SYSROOT_PREFIX/usr/include
 }
@@ -144,25 +146,28 @@ make_target() {
     done
   fi
 
-  LDFLAGS="" make $KERNEL_IMAGE $KERNEL_MAKE_EXTRACMD
+  LDFLAGS="" make $KERNEL_TARGET $KERNEL_MAKE_EXTRACMD
+
+  if [ "$BUILD_ANDROID_BOOTIMG" = "yes" ]; then
+    LDFLAGS="" mkbootimg --kernel arch/$TARGET_KERNEL_ARCH/boot/$KERNEL_TARGET --ramdisk $ROOT/$BUILD/image/initramfs.cpio \
+      --second "$ANDROID_BOOTIMG_SECOND" --output arch/$TARGET_KERNEL_ARCH/boot/boot.img
+    mv -f arch/$TARGET_KERNEL_ARCH/boot/boot.img arch/$TARGET_KERNEL_ARCH/boot/$KERNEL_TARGET
+  fi
 }
 
 makeinstall_target() {
   if [ "$BOOTLOADER" = "u-boot" ]; then
     mkdir -p $INSTALL/usr/share/bootloader
-    for dtb in arch/arm/boot/dts/*.dtb; do
+    for dtb in arch/$TARGET_KERNEL_ARCH/boot/dts/*.dtb; do
       cp $dtb $INSTALL/usr/share/bootloader 2>/dev/null || :
     done
-  elif [ "$BOOTLOADER" = "bcm2835-bootloader" ]; then
+  elif [ "$BOOTLOADER" = "bcm2835-firmware" ]; then
     mkdir -p $INSTALL/usr/share/bootloader/overlays
-    touch $INSTALL/usr/share/bootloader/overlays/README.TXT
-    for dtb in arch/arm/boot/dts/*.dtb; do
-      if `echo "$dtb" | grep ".*/bcm2[^/]*$" >/dev/null`; then
-        cp $dtb $INSTALL/usr/share/bootloader 2>/dev/null || :
-      else
-        cp $dtb $INSTALL/usr/share/bootloader/overlays 2>/dev/null || :
-      fi
+    cp -p arch/$TARGET_KERNEL_ARCH/boot/dts/*.dtb $INSTALL/usr/share/bootloader
+    for dtb in arch/$TARGET_KERNEL_ARCH/boot/dts/overlays/*.dtbo; do
+      cp $dtb $INSTALL/usr/share/bootloader/overlays 2>/dev/null || :
     done
+    cp -p arch/$TARGET_KERNEL_ARCH/boot/dts/overlays/README $INSTALL/usr/share/bootloader/overlays
   fi
 }
 
@@ -195,5 +200,6 @@ post_install() {
   mkdir -p $INSTALL/lib/firmware/
     ln -sf /storage/.config/firmware/ $INSTALL/lib/firmware/updates
 
-  enable_service cpufreq-threshold.service
+  # bluez looks in /etc/firmware/
+    ln -sf /lib/firmware/ $INSTALL/etc/firmware
 }

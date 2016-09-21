@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,11 @@
 ################################################################################
 
 PKG_NAME="kodi"
-PKG_VERSION="15.0-beta2-45c2a2d"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.kodi.tv"
-PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
-PKG_DEPENDS_TARGET="toolchain kodi:host libsquish boost Python zlib bzip2 systemd pciutils lzo pcre swig:host libass curl rtmpdump fontconfig fribidi tinyxml libjpeg-turbo libpng tiff freetype jasper libogg libcdio libmpeg2 taglib libxml2 libxslt yajl sqlite libvorbis ffmpeg"
+PKG_DEPENDS_TARGET="toolchain kodi:host xmlstarlet:host Python libz systemd pciutils lzo pcre swig:host libass curl fontconfig fribidi tinyxml libjpeg-turbo freetype libcdio libdvdnav taglib libxml2 libxslt yajl sqlite ffmpeg crossguid giflib opengl"
 PKG_DEPENDS_HOST="lzo:host libpng:host libjpeg-turbo:host giflib:host"
 PKG_PRIORITY="optional"
 PKG_SECTION="mediacenter"
@@ -33,6 +31,21 @@ PKG_LONGDESC="Kodi Media Center (which was formerly named Xbox Media Center or X
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
+case "$KODIPLAYER_DRIVER" in
+  bcm2835-firmware)
+    PKG_VERSION="49082fb"
+    PKG_GIT_URL="https://github.com/OpenELEC/xbmc.git"
+    PKG_GIT_BRANCH="newclock5"
+    PKG_KEEP_CHECKOUT="no"
+    ;;
+  *)
+    PKG_VERSION="c6a62cf"
+    PKG_GIT_URL="https://github.com/xbmc/xbmc.git"
+    PKG_GIT_BRANCH="master"
+    PKG_KEEP_CHECKOUT="no"
+    ;;
+esac
+
 # configure GPU drivers and dependencies:
   get_graphicdrivers
 
@@ -41,28 +54,18 @@ PKG_AUTORECONF="no"
 
 if [ "$DISPLAYSERVER" = "x11" ]; then
 # for libX11 support
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libX11 libXext libdrm"
-# for libXrandr support
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libXrandr"
-  KODI_XORG="--enable-x11 --enable-xrandr"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libX11 libXext libdrm libXrandr"
+  KODI_XORG="--enable-x11"
 else
-  KODI_XORG="--disable-x11 --disable-xrandr"
+  KODI_XORG="--disable-x11"
 fi
 
-if [ ! "$OPENGL" = "no" ]; then
+if [ "$OPENGL" = "mesa" ]; then
 # for OpenGL (GLX) support
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $OPENGL glu glew"
-  KODI_OPENGL="--enable-gl"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET glu"
+  KODI_OPENGL="--enable-gl --disable-gles"
 else
-  KODI_OPENGL="--disable-gl"
-fi
-
-if [ "$OPENGLES_SUPPORT" = yes ]; then
-# for OpenGL-ES support
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $OPENGLES"
-  KODI_OPENGLES="--enable-gles"
-else
-  KODI_OPENGLES="--disable-gles"
+  KODI_OPENGL="--disable-gl --enable-gles"
 fi
 
 if [ "$ALSA_SUPPORT" = yes ]; then
@@ -71,6 +74,14 @@ if [ "$ALSA_SUPPORT" = yes ]; then
   KODI_ALSA="--enable-alsa"
 else
   KODI_ALSA="--disable-alsa"
+fi
+
+if [ "$PULSEAUDIO_SUPPORT" = yes ]; then
+# for PulseAudio support
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET pulseaudio"
+  KODI_PULSEAUDIO="--enable-pulse"
+else
+  KODI_PULSEAUDIO="--disable-pulse"
 fi
 
 if [ "$ESPEAK_SUPPORT" = yes ]; then
@@ -84,14 +95,6 @@ if [ "$CEC_SUPPORT" = yes ]; then
   KODI_CEC="--enable-libcec"
 else
   KODI_CEC="--disable-libcec"
-fi
-
-if [ "$JOYSTICK_SUPPORT" = yes ]; then
-# for Joystick support
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET SDL2"
-  KODI_JOYSTICK="--enable-joystick"
-else
-  KODI_JOYSTICK="--disable-joystick"
 fi
 
 if [ "$KODI_OPTICAL_SUPPORT" = yes ]; then
@@ -128,7 +131,7 @@ else
 fi
 
 if [ "$KODI_MYSQL_SUPPORT" = yes ]; then
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET mysql"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET mariadb"
   KODI_MYSQL="--enable-mysql"
 else
   KODI_MYSQL="--disable-mysql"
@@ -185,7 +188,7 @@ fi
 if [ ! "$KODIPLAYER_DRIVER" = default ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $KODIPLAYER_DRIVER"
 
-  if [ "$KODIPLAYER_DRIVER" = bcm2835-driver ]; then
+  if [ "$KODIPLAYER_DRIVER" = bcm2835-firmware ]; then
     KODI_OPENMAX="--enable-openmax"
     KODI_PLAYER="--enable-player=omxplayer"
     KODI_CODEC="--with-platform=raspberry-pi"
@@ -202,7 +205,7 @@ if [ ! "$KODIPLAYER_DRIVER" = default ]; then
   fi
 fi
 
-if [ "$VDPAU_SUPPORT" = yes ]; then
+if [ "$VDPAU_SUPPORT" = "yes" -a "$DISPLAYSERVER" = "x11" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libvdpau"
   KODI_VDPAU="--enable-vdpau"
 else
@@ -228,33 +231,26 @@ export PYTHON_LDFLAGS="-L$SYSROOT_PREFIX/usr/lib/python$PYTHON_VERSION -lpython$
 export PYTHON_SITE_PKG="$SYSROOT_PREFIX/usr/lib/python$PYTHON_VERSION/site-packages"
 export ac_python_version="$PYTHON_VERSION"
 
+export GIT_REV="$PKG_VERSION"
+
 PKG_CONFIGURE_OPTS_TARGET="gl_cv_func_gettimeofday_clobber=no \
-                           ac_cv_lib_bluetooth_hci_devid=no \
+                           ac_python_version=$PYTHON_VERSION \
                            --disable-debug \
                            --disable-optimizations \
                            $KODI_OPENGL \
-                           $KODI_OPENGLES \
                            $KODI_OPENMAX \
                            $KODI_VDPAU \
                            $KODI_VAAPI \
                            --disable-vtbdecoder \
                            --disable-tegra \
                            --disable-profiling \
-                           $KODI_JOYSTICK \
                            $KODI_CEC \
                            --enable-udev \
                            --disable-libusb \
-                           --disable-goom \
-                           --disable-rsxs \
-                           --disable-projectm \
-                           --disable-waveform \
-                           --disable-spectrum \
-                           --disable-fishbmc \
                            $KODI_XORG \
                            --disable-ccache \
                            $KODI_ALSA \
-                           --disable-pulse \
-                           --enable-rtmp \
+                           $KODI_PULSEAUDIO \
                            $KODI_SAMBA \
                            $KODI_NFS \
                            --disable-libcap \
@@ -266,8 +262,8 @@ PKG_CONFIGURE_OPTS_TARGET="gl_cv_func_gettimeofday_clobber=no \
                            $KODI_SSH \
                            $KODI_AIRPLAY \
                            $KODI_AIRTUNES \
+                           --disable-libbluetooth \
                            $KODI_NONFREE \
-                           --disable-asap-codec \
                            $KODI_WEBSERVER \
                            $KODI_OPTICAL \
                            $KODI_BLURAY \
@@ -276,27 +272,46 @@ PKG_CONFIGURE_OPTS_TARGET="gl_cv_func_gettimeofday_clobber=no \
                            $KODI_CODEC \
                            $KODI_PLAYER"
 
+build_cmake_hosttool() {
+# this build a cmake tool for host with cmake
+# usage 'build_cmake_hosttool <path/to/source>'
+  mkdir -p $ROOT/$PKG_BUILD/$1/build
+  cd $ROOT/$PKG_BUILD/$1/build
+    cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_CONF \
+          -DCMAKE_INSTALL_PREFIX=$ROOT/$TOOLCHAIN \
+          -DCORE_SOURCE_DIR=$ROOT/$PKG_BUILD \
+          ..
+    make
+  cd $ROOT/$PKG_BUILD
+}
+
 pre_configure_host() {
 # kodi fails to build in subdirs
   cd $ROOT/$PKG_BUILD
     rm -rf .$HOST_NAME
+
+  echo "$PKG_VERSION" > VERSION
+}
+
+configure_host() {
+  : # not needed
 }
 
 make_host() {
-  make -C tools/depends/native/JsonSchemaBuilder
+  build_cmake_hosttool tools/depends/native/JsonSchemaBuilder
   make -C tools/depends/native/TexturePacker
 }
 
 makeinstall_host() {
-  cp -PR tools/depends/native/JsonSchemaBuilder/native/JsonSchemaBuilder $ROOT/$TOOLCHAIN/bin
+  cp -PR tools/depends/native/JsonSchemaBuilder/build/JsonSchemaBuilder $ROOT/$TOOLCHAIN/bin
   rm -f $ROOT/$TOOLCHAIN/bin/TexturePacker
   cp -PR tools/depends/native/TexturePacker/native/TexturePacker $ROOT/$TOOLCHAIN/bin
 }
 
 pre_build_target() {
 # adding fake Makefile for stripped skin
-  mkdir -p $PKG_BUILD/addons/skin.confluence/media
-  touch $PKG_BUILD/addons/skin.confluence/media/Makefile.in
+  mkdir -p $PKG_BUILD/addons/skin.estuary/media
+  touch $PKG_BUILD/addons/skin.estuary/media/Makefile.in
 
 # autoreconf
   BOOTSTRAP_STANDALONE=1 make -C $PKG_BUILD -f bootstrap.mk
@@ -307,12 +322,16 @@ pre_configure_target() {
   cd $ROOT/$PKG_BUILD
     rm -rf .$TARGET_NAME
 
+# libdvd
+  cp -P $PKG_DIR/libdvd/libdvd-makefile.in $ROOT/$PKG_BUILD/lib/libdvd/Makefile.in
+  export DVD_PREFIX="$SYSROOT_PREFIX"
+
 # kodi should never be built with lto
   strip_lto
 
   export CFLAGS="$CFLAGS $KODI_CFLAGS"
   export CXXFLAGS="$CXXFLAGS $KODI_CXXFLAGS"
-  export LIBS="$LIBS -lz"
+  export LIBS="$LIBS -lz -lssp"
 
   export JSON_BUILDER=$ROOT/$TOOLCHAIN/bin/JsonSchemaBuilder
 }
@@ -322,14 +341,20 @@ make_target() {
   SKIN_DIR="skin.`tolower $SKIN_DEFAULT`"
 
 # setup default skin inside the sources
-  sed -i -e "s|skin.confluence|$SKIN_DIR|g" $ROOT/$PKG_BUILD/xbmc/settings/Settings.h
-  sed -i -e "s|skin.confluence|$SKIN_DIR|g" $ROOT/$PKG_BUILD/system/settings/settings.xml
+  sed -i -e "s|skin.estuary|$SKIN_DIR|g" $ROOT/$PKG_BUILD/xbmc/system.h
+  sed -i -e "s|skin.estuary|$SKIN_DIR|g" $ROOT/$PKG_BUILD/system/settings/settings.xml
 
   make externals
   make kodi.bin
 
   if [ "$DISPLAYSERVER" = "x11" ]; then
     make kodi-xrandr
+  fi
+
+  if [ "$SKIN_REMOVE_SHIPPED" = "yes" ]; then
+    rm -rf addons/skin.estuary
+  else
+    TexturePacker -input addons/skin.estuary/media/ -output Textures.xbt -dupecheck -use_none
   fi
 }
 
@@ -340,8 +365,8 @@ post_makeinstall_target() {
   rm -rf $INSTALL/usr/bin/xbmc-standalone
   rm -rf $INSTALL/usr/lib/kodi/*.cmake
 
-  # fix binaryaddons multiarch build meh
-  cp -P project/cmake/scripts/linux/UseMultiArch.cmake $SYSROOT_PREFIX/usr/lib/kodi
+  # more binaddons cross compile badness meh
+  sed -i -e "s:INCLUDE_DIR /usr/include/kodi:INCLUDE_DIR $SYSROOT_PREFIX/usr/include/kodi:g" $SYSROOT_PREFIX/usr/lib/kodi/KodiConfig.cmake
 
   mkdir -p $INSTALL/usr/lib/kodi
     cp $PKG_DIR/scripts/kodi-config $INSTALL/usr/lib/kodi
@@ -363,7 +388,32 @@ post_makeinstall_target() {
   rm -rf $INSTALL/usr/share/applications
   rm -rf $INSTALL/usr/share/icons
   rm -rf $INSTALL/usr/share/kodi/addons/service.xbmc.versioncheck
+  rm -rf $INSTALL/usr/share/kodi/addons/skin.estouchy
+  rm -rf $INSTALL/usr/share/kodi/addons/visualization.vortex
   rm -rf $INSTALL/usr/share/xsessions
+
+  # update addon manifest
+    KODI_ADDON_MANIFEST="$INSTALL/usr/share/kodi/system/addon-manifest.xml"
+    xmlstarlet ed -L -d "/addons/addon[text()='service.xbmc.versioncheck']" $KODI_ADDON_MANIFEST
+    xmlstarlet ed -L -d "/addons/addon[text()='skin.estouchy']" $KODI_ADDON_MANIFEST
+    xmlstarlet ed -L --subnode "/addons" -t elem -n "addon" -v "os.openelec.tv" $KODI_ADDON_MANIFEST
+    xmlstarlet ed -L --subnode "/addons" -t elem -n "addon" -v "service.openelec.settings" $KODI_ADDON_MANIFEST
+    xmlstarlet ed -L --subnode "/addons" -t elem -n "addon" -v "repository.openelec.tv" $KODI_ADDON_MANIFEST
+    xmlstarlet ed -L --subnode "/addons" -t elem -n "addon" -v "repository.kodi.game" $KODI_ADDON_MANIFEST
+
+  if [ ! "$SKIN_REMOVE_SHIPPED" = "yes" ]; then
+    # Rebrand
+      sed -e "s,@DISTRONAME@,$DISTRONAME,g" -i $INSTALL/usr/share/kodi/addons/skin.estuary/1080i/Settings.xml
+
+    rm -rf $INSTALL/usr/share/kodi/addons/skin.estuary/media
+    mkdir -p $INSTALL/usr/share/kodi/addons/skin.estuary/media
+    cp Textures.xbt $INSTALL/usr/share/kodi/addons/skin.estuary/media
+
+    mkdir -p $INSTALL/usr/share/kodi/addons/skin.estuary/media/icons/settings
+    cp $PKG_DIR/media/openelec.png $INSTALL/usr/share/kodi/addons/skin.estuary/media/icons/settings
+  else
+    xmlstarlet ed -L -d "/addons/addon[text()='skin.estuary']" $KODI_ADDON_MANIFEST
+  fi
 
   mkdir -p $INSTALL/usr/share/kodi/addons
     cp -R $PKG_DIR/config/os.openelec.tv $INSTALL/usr/share/kodi/addons

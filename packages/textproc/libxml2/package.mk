@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,14 @@
 ################################################################################
 
 PKG_NAME="libxml2"
-PKG_VERSION="2.9.2"
+PKG_VERSION="2.9.4"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MIT"
 PKG_SITE="http://xmlsoft.org"
 PKG_URL="ftp://xmlsoft.org/libxml2/$PKG_NAME-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain zlib"
+PKG_DEPENDS_HOST="toolchain libz:host"
+PKG_DEPENDS_TARGET="toolchain libz"
 PKG_PRIORITY="optional"
 PKG_SECTION="textproc"
 PKG_SHORTDESC="libxml: XML parser library for Gnome"
@@ -32,21 +33,21 @@ PKG_IS_ADDON="no"
 
 PKG_AUTORECONF="yes"
 
-PKG_CONFIGURE_OPTS_TARGET="ac_cv_header_ansidecl_h=no \
+PKG_CONFIGURE_OPTS_ALL="ac_cv_header_ansidecl_h=no \
              --enable-static \
              --enable-shared \
              --disable-silent-rules \
              --enable-ipv6 \
              --without-python \
-             --with-zlib \
-             --with-sysroot=$SYSROOT_PREFIX \
+             --with-zlib=$ROOT/$TOOLCHAIN \
              --without-lzma"
 
-post_makeinstall_target() {
-  $SED "s:\(['= ]\)/usr:\\1$SYSROOT_PREFIX/usr:g" \
-    $SYSROOT_PREFIX/usr/bin/xml2-config
+PKG_CONFIGURE_OPTS_HOST="$PKG_CONFIGURE_OPTS_ALL --with-zlib=$ROOT/$TOOLCHAIN"
 
-  mv $SYSROOT_PREFIX/usr/bin/xml2-config $ROOT/$TOOLCHAIN/bin
+PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_ALL --with-zlib=$SYSROOT_PREFIX/usr --with-sysroot=$SYSROOT_PREFIX"
+
+post_makeinstall_target() {
+  $SED "s:\(['= ]\)/usr:\\1$SYSROOT_PREFIX/usr:g" $SYSROOT_PREFIX/usr/bin/xml2-config
 
   rm -rf $INSTALL/usr/bin
   rm -rf $INSTALL/usr/lib/xml2Conf.sh

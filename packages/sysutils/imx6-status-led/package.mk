@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2015 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ make_target() {
 }
 
 makeinstall_target() {
-  mkdir -p $INSTALL/usr/bin
-  cp -PR $PKG_DIR/bin/* $INSTALL/usr/bin
+  mkdir -p $INSTALL/usr/lib/openelec
+  cp $PKG_DIR/scripts/* $INSTALL/usr/lib/openelec
 }
 
 post_install() {

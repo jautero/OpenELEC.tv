@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="fontconfig"
-PKG_VERSION="2.11.1"
+PKG_VERSION="2.12.1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.fontconfig.org"
 PKG_URL="http://www.freedesktop.org/software/fontconfig/release/$PKG_NAME-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain util-macros freetype libxml2 zlib expat"
+PKG_DEPENDS_TARGET="toolchain util-macros freetype libxml2 libz expat"
 PKG_PRIORITY="optional"
 PKG_SECTION="x11/other"
 PKG_SHORTDESC="fontconfig: A library for font customization and configuration"
@@ -32,9 +32,10 @@ PKG_LONGDESC="Fontconfig is a library for font customization and configuration."
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
-PKG_CONFIGURE_OPTS_TARGET="--with-arch=$TARGET_ARCH \
+PKG_CONFIGURE_OPTS_TARGET="--disable-shared --enable-static \
+                           --with-arch=$TARGET_ARCH \
                            --with-cache-dir=/storage/.cache/fontconfig \
-                           --with-default-fonts=/usr/share/fonts/liberation \
+                           --with-default-fonts=/usr/share/fonts \
                            --without-add-fonts \
                            --disable-dependency-tracking \
                            --disable-docs"
@@ -45,6 +46,7 @@ pre_configure_target() {
   CXXFLAGS=`echo $CXXFLAGS | sed -e "s|-O3|-O2|"`
   CFLAGS="$CFLAGS -I$ROOT/$PKG_BUILD"
   CXXFLAGS="$CXXFLAGS -I$ROOT/$PKG_BUILD"
+  LDFLAGS="$LDFLAGS -lz"
 }
 
 post_makeinstall_target() {

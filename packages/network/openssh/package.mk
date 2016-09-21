@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="openssh"
-PKG_VERSION="6.8p1"
+PKG_VERSION="7.3p1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.openssh.com/"
-PKG_URL="ftp://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/$PKG_NAME-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain zlib libressl"
+PKG_URL="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_DEPENDS_TARGET="toolchain libz libressl"
 PKG_PRIORITY="optional"
 PKG_SECTION="network"
 PKG_SHORTDESC="openssh: An open re-implementation of the SSH package"
@@ -50,7 +50,7 @@ PKG_CONFIGURE_OPTS_TARGET="--sysconfdir=/etc/ssh \
                            --without-pam"
 
 pre_configure_target() {
-  export LD="$TARGET_CC"
+  export LD="$CC"
   export LDFLAGS="$TARGET_CFLAGS $TARGET_LDFLAGS"
 }
 
@@ -63,6 +63,9 @@ post_makeinstall_target() {
   rm -rf $INSTALL/usr/bin/ssh-add
   rm -rf $INSTALL/usr/bin/ssh-agent
   rm -rf $INSTALL/usr/bin/ssh-keyscan
+
+  sed -i $INSTALL/etc/ssh/sshd_config -e "s|^#PermitRootLogin.*|PermitRootLogin yes|g"
+  echo "PubkeyAcceptedKeyTypes +ssh-dss" >> $INSTALL/etc/ssh/sshd_config
 }
 
 post_install() {

@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,12 +17,12 @@
 ################################################################################
 
 PKG_NAME="libva"
-PKG_VERSION="1.5.1"
+PKG_VERSION="1.7.2"
 PKG_REV="1"
 PKG_ARCH="x86_64"
 PKG_LICENSE="GPL"
 PKG_SITE="http://freedesktop.org/wiki/Software/vaapi"
-PKG_URL="http://cgit.freedesktop.org/vaapi/libva/snapshot/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_URL="http://www.freedesktop.org/software/vaapi/releases/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.bz2"
 PKG_DEPENDS_TARGET="toolchain libX11 libXext libXfixes libdrm mesa glu"
 PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
@@ -37,7 +37,7 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-silent-rules \
                            --enable-drm \
                            --enable-x11 \
                            --enable-glx \
-                           --disable-egl \
+                           --enable-egl \
                            --disable-wayland \
                            --disable-dummy-driver \
                            --with-drivers-path=/usr/lib/va"

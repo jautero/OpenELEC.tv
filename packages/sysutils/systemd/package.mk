@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="systemd"
-PKG_VERSION="219"
+PKG_VERSION="231"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.freedesktop.org/wiki/Software/systemd"
-PKG_URL="http://www.freedesktop.org/software/systemd/$PKG_NAME-$PKG_VERSION.tar.xz"
-PKG_DEPENDS_TARGET="toolchain libcap kmod util-linux libgcrypt"
+PKG_URL="https://github.com/systemd/systemd/archive/v$PKG_VERSION.tar.gz"
+PKG_DEPENDS_TARGET="toolchain libcap kmod util-linux entropy"
 PKG_PRIORITY="required"
 PKG_SECTION="system"
 PKG_SHORTDESC="systemd: a system and session manager"
@@ -35,25 +35,23 @@ PKG_AUTORECONF="yes"
 PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            ac_cv_have_decl_IFLA_BOND_AD_INFO=no \
                            ac_cv_have_decl_IFLA_BRPORT_UNICAST_FLOOD=no \
+                           ac_cv_path_MOUNT_PATH="/bin/mount"
+                           ac_cv_path_UMOUNT_PATH="/bin/umount"
                            KMOD=/usr/bin/kmod \
+                           --with-support-url="$SUPPORT_URL" \
                            --disable-nls \
-                           --disable-gtk-doc \
-                           --disable-gtk-doc-html \
-                           --disable-gtk-doc-pdf \
-                           --disable-python-devel \
-                           --disable-python-devel \
                            --disable-dbus \
                            --disable-utmp \
-                           --disable-compat-libs \
                            --disable-coverage \
                            --enable-kmod \
                            --disable-xkbcommon \
                            --enable-blkid \
                            --disable-seccomp \
                            --disable-ima \
-                           --disable-chkconfig \
                            --disable-selinux \
                            --disable-apparmor \
+                           --disable-adm-group \
+                           --disable-wheel-group \
                            --disable-xz \
                            --disable-zlib \
                            --disable-bzip2 \
@@ -70,9 +68,9 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            --disable-gnutls \
                            --disable-libcurl \
                            --disable-libidn \
+                           --disable-libiptc \
                            --disable-binfmt \
                            --disable-vconsole \
-                           --disable-bootchart \
                            --disable-quotacheck \
                            --enable-tmpfiles \
                            --disable-sysusers \
@@ -80,7 +78,7 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            --disable-randomseed \
                            --disable-backlight \
                            --disable-rfkill \
-                           --enable-logind \
+                           --enable-logind --without-kill-user-processes \
                            --disable-machined \
                            --disable-importd \
                            --disable-hostnamed \
@@ -89,17 +87,16 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            --disable-localed \
                            --disable-coredump \
                            --disable-polkit \
-                           --disable-resolved \
+                           --disable-resolved --with-default-dnssec=allow-downgrade \
                            --disable-networkd \
                            --disable-efi \
-                           --disable-terminal \
-                           --disable-kdbus \
+                           --disable-gnuefi \
                            --disable-myhostname \
-                           --disable-gudev \
                            --enable-hwdb \
                            --disable-manpages \
                            --disable-hibernate \
                            --disable-ldconfig \
+                           --disable-tpm --with-tpm-pcrindex=8 \
                            --enable-split-usr \
                            --disable-tests \
                            --without-python \
@@ -109,19 +106,35 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            --with-dbuspolicydir=/etc/dbus-1/system.d \
                            --with-dbussessionservicedir=/usr/share/dbus-1/services \
                            --with-dbussystemservicedir=/usr/share/dbus-1/system-services \
-                           --with-dbusinterfacedir=/usr/share/dbus-1/interfaces \
                            --with-rootprefix=/usr \
                            --with-rootlibdir=/lib"
+
+unpack() {
+  tar xf $ROOT/$SOURCES/systemd/v$PKG_VERSION.tar.gz -C $ROOT/$BUILD
+}
+
+pre_build_target() {
+# broken autoreconf
+  ( cd $PKG_BUILD
+    intltoolize --force
+  )
+}
+
+pre_configure_target() {
+  export CFLAGS="$CFLAGS -fno-schedule-insns -fno-schedule-insns2"
+}
 
 post_makeinstall_target() {
   # remove unneeded stuff
   rm -rf $INSTALL/etc/systemd/system
   rm -rf $INSTALL/etc/xdg
+  rm -rf $INSTALL/etc/X11
   rm  -f $INSTALL/usr/bin/kernel-install
   rm -rf $INSTALL/usr/lib/kernel/install.d
   rm -rf $INSTALL/usr/lib/rpm
   rm -rf $INSTALL/usr/lib/systemd/user
   rm -rf $INSTALL/usr/lib/tmpfiles.d/etc.conf
+  rm -rf $INSTALL/usr/lib/tmpfiles.d/home.conf
   rm -rf $INSTALL/usr/share/factory
   rm -rf $INSTALL/usr/share/zsh
 
@@ -166,8 +179,9 @@ post_makeinstall_target() {
   rm -rf $INSTALL/usr/lib/systemd/system-generators
   rm -rf $INSTALL/usr/lib/systemd/catalog
 
-  # meh presets
-  rm -rf $INSTALL/usr/lib/systemd/system-preset
+  # disable usage of presets, see: https://freedesktop.org/wiki/Software/systemd/Preset/
+  rm -rf $INSTALL/usr/lib/systemd/system-preset/*
+  echo "disable *" $INSTALL/usr/lib/systemd/system-preset/99-default.preset
 
   # remove networkd
   rm -rf $INSTALL/usr/lib/systemd/network
@@ -175,7 +189,6 @@ post_makeinstall_target() {
   # tune journald.conf
   sed -e "s,^.*Compress=.*$,Compress=no,g" -i $INSTALL/etc/systemd/journald.conf
   sed -e "s,^.*SplitMode=.*$,SplitMode=none,g" -i $INSTALL/etc/systemd/journald.conf
-  sed -e "s,^.*MaxRetentionSec=.*$,MaxRetentionSec=1day,g" -i $INSTALL/etc/systemd/journald.conf
   sed -e "s,^.*RuntimeMaxUse=.*$,RuntimeMaxUse=2M,g" -i $INSTALL/etc/systemd/journald.conf
   sed -e "s,^.*RuntimeMaxFileSize=.*$,RuntimeMaxFileSize=128K,g" -i $INSTALL/etc/systemd/journald.conf
   sed -e "s,^.*SystemMaxUse=.*$,SystemMaxUse=10M,g" -i $INSTALL/etc/systemd/journald.conf

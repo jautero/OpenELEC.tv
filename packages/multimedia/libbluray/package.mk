@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="libbluray"
-PKG_VERSION="0.8.0"
+PKG_VERSION="0.9.3"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
-PKG_SITE="http://www.videolan.org/developers/libbluray.html"
-PKG_URL="ftp://ftp.videolan.org/pub/videolan/libbluray/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.bz2"
-PKG_DEPENDS_TARGET="toolchain freetype libxml2"
+PKG_SITE="https://www.videolan.org/developers/libbluray.html"
+PKG_URL="https://ftp.videolan.org/pub/videolan/libbluray/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.bz2"
+PKG_DEPENDS_TARGET="toolchain fontconfig freetype libxml2"
 PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="libbluray: A Blu-Ray Discs playback library"
@@ -56,4 +56,14 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-werror \
                            --disable-doxygen-html \
                            --disable-doxygen-ps \
                            --disable-doxygen-pdf \
+                           --with-freetype \
+                           --with-fontconfig \
+                           --with-libxml2 \
                            --with-gnu-ld"
+
+post_makeinstall_target() {
+  mkdir -p $SYSROOT_PREFIX/usr/include/$PKG_NAME/util
+    cp $ROOT/$PKG_BUILD/src/util/attributes.h $SYSROOT_PREFIX/usr/include/$PKG_NAME/util
+  mkdir -p $SYSROOT_PREFIX/usr/include/$PKG_NAME/bdnav
+    cp $ROOT/$PKG_BUILD/src/libbluray/bdnav/clpi_data.h $SYSROOT_PREFIX/usr/include/$PKG_NAME/bdnav
+}

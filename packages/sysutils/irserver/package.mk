@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ elif [ "$TARGET_ARCH" = "arm" ]; then
 fi
 
 make_target() {
-  make CC=$TARGET_CC CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" $IRSERVER_BIN
+  make CC=$CC CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" $IRSERVER_BIN
   $STRIP $IRSERVER_BIN
 }
 

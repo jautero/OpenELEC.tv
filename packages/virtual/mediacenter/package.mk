@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.openelec.tv"
 PKG_URL=""
-PKG_DEPENDS_TARGET="toolchain $MEDIACENTER $MEDIACENTER-theme-$SKIN_DEFAULT"
+PKG_DEPENDS_TARGET="toolchain $MEDIACENTER"
 PKG_PRIORITY="optional"
 PKG_SECTION="virtual"
 PKG_SHORTDESC="Mediacenter: Metapackage"
@@ -32,16 +32,28 @@ PKG_LONGDESC=""
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-for i in $SKINS; do
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $MEDIACENTER-theme-$i"
-done
-
 if [ "$MEDIACENTER" = "kodi" ]; then
 # some python stuff needed for various addons
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET Pillow"
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET simplejson"
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET pycrypto"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET xmlstarlet"
 
 # other packages
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET OpenELEC-settings"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET peripheral.joystick"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET repository.kodi.game"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET inputstream.mpd"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET inputstream.rtmp"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET inputstream.smoothstream"
+
+  if [ -n "$SKINS" ]; then
+    for i in $SKINS; do
+      PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $MEDIACENTER-theme-$i"
+    done
+  fi
+
+  if [ "$KODI_LANGUAGE_ADDONS" = "yes" ]; then
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET kodi-language-addons"
+  fi
 fi

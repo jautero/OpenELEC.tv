@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2015 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ PKG_ARCH="arm"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.openelec.tv/"
 PKG_URL=""
-PKG_DEPENDS_TARGET=""
+PKG_DEPENDS_TARGET="imx6-status-led"
 PKG_PRIORITY="optional"
 PKG_SECTION="system"
 PKG_SHORTDESC="i.MX6 SoC fan monitor"
@@ -37,9 +37,13 @@ make_target() {
 
 makeinstall_target() {
   mkdir -p $INSTALL/usr/config
-  cp -PR $PKG_DIR/config/* $INSTALL/usr/config
+  cp $PKG_DIR/config/* $INSTALL/usr/config
+
   mkdir -p $INSTALL/usr/bin
-  cp -PR $PKG_DIR/bin/* $INSTALL/usr/bin
+  cp $PKG_DIR/bin/* $INSTALL/usr/bin
+
+  mkdir -p $INSTALL/usr/lib/openelec
+  cp $PKG_DIR/scripts/* $INSTALL/usr/lib/openelec
 }
 
 post_install() {

@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,12 +17,13 @@
 ################################################################################
 
 PKG_NAME="libressl"
-PKG_VERSION="2.1.6"
+PKG_VERSION="2.4.2"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="BSD"
 PKG_SITE="http://www.libressl.org/"
 PKG_URL="http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_DEPENDS_HOST="ccache:host"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
 PKG_SECTION="security"
@@ -30,16 +31,14 @@ PKG_SHORTDESC="libressl: a FREE version of the SSL/TLS protocol forked from Open
 PKG_LONGDESC="LibreSSL is a FREE version of the SSL/TLS protocol forked from OpenSSL"
 
 PKG_IS_ADDON="no"
-PKG_AUTORECONF="yes"
+PKG_AUTORECONF="no"
 
 post_makeinstall_target() {
-# ca-certification: provides a tool to download and create ca-bundle.crt
-# download url: http://curl.haxx.se
-# create new cert: perl ./mk-ca-bundle.pl
-  mkdir -p $INSTALL/$SSL_CERTIFICATES
-    cp $PKG_DIR/cert/ca-bundle.crt $INSTALL/$SSL_CERTIFICATES/cacert.pem
-  # backwards comatibility
   mkdir -p $INSTALL/etc/pki/tls
-  ln -sf $SSL_CERTIFICATES/cacert.pem $INSTALL/etc/pki/tls/cacert.pem
-  ln -sf $SSL_CERTIFICATES/cacert.pem $INSTALL/etc/ssl/cert.pem
+    ln -sf /etc/ssl/cert.pem $INSTALL/etc/pki/tls/cacert.pem
+  mkdir -p $INSTALL/etc/pki/tls/certs
+    ln -sf /etc/ssl/cert.pem $INSTALL/etc/pki/tls/certs/ca-bundle.crt
+
+  mkdir -p $SYSROOT_PREFIX/usr/lib/pkgconfig
+    cp $PKG_DIR/config/*.pc $SYSROOT_PREFIX/usr/lib/pkgconfig
 }

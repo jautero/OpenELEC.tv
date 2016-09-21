@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,15 +17,15 @@
 ################################################################################
 
 PKG_NAME="boost"
-PKG_VERSION="1_58_0"
+PKG_VERSION="1_61_0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.boost.org/"
-PKG_URL="$SOURCEFORGE_SRC/boost/boost/1.56.0/${PKG_NAME}_${PKG_VERSION}.tar.bz2"
+PKG_URL="$SOURCEFORGE_SRC/boost/boost/1.61.0/${PKG_NAME}_${PKG_VERSION}.tar.bz2"
 PKG_SOURCE_DIR="${PKG_NAME}_${PKG_VERSION}"
 PKG_DEPENDS_HOST=""
-PKG_DEPENDS_TARGET="toolchain boost:host Python:host zlib bzip2"
+PKG_DEPENDS_TARGET="toolchain boost:host Python:host libz bzip2"
 PKG_PRIORITY="optional"
 PKG_SECTION="devel"
 PKG_SHORTDESC="boost: Peer-reviewed STL style libraries for C++"
@@ -55,7 +55,7 @@ configure_target() {
                   --with-bjam=$ROOT/$TOOLCHAIN/bin/bjam \
                   --with-python=$ROOT/$TOOLCHAIN/bin/python \
 
-  echo "using gcc : `$TARGET_CC -v 2>&1  | tail -n 1 |awk '{print $3}'` : $TARGET_CC  : <compileflags>\"$CFLAGS\" <linkflags>\"$LDFLAGS\" ;" \
+  echo "using gcc : `$CC -v 2>&1  | tail -n 1 |awk '{print $3}'` : $CC  : <compileflags>\"$CFLAGS\" <linkflags>\"$LDFLAGS\" ;" \
     > tools/build/src/user-config.jam
 }
 

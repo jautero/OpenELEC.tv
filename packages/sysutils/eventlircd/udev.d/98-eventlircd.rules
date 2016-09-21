@@ -55,19 +55,24 @@ ATTRS{name}=="bdremoteng", \
 #-------------------------------------------------------------------------------
 SUBSYSTEMS=="rc", \
   ENV{eventlircd_enable}="true", \
-  ENV{eventlircd_evmap}="ircore.evmap"
+  ENV{eventlircd_evmap}="default.evmap"
 
 #-------------------------------------------------------------------------------
 # Ask eventlircd to handle power button.
 #-------------------------------------------------------------------------------
 SUBSYSTEMS=="acpi", ATTRS{hid}=="LNXPWRBN", \
   ENV{eventlircd_enable}="true", \
-  ENV{eventlircd_evmap}="power.evmap"
+  ENV{eventlircd_evmap}="default.evmap"
 
-# WeTek Play keyboard (power button)
+# WeTek Play (power button)
 SUBSYSTEMS=="input", ATTRS{name}=="key_input", \
   ENV{eventlircd_enable}="true", \
-  ENV{eventlircd_evmap}="power.evmap"
+  ENV{eventlircd_evmap}="default.evmap"
+
+# WeTek Core (power button)
+SUBSYSTEMS=="input", ATTRS{name}=="gpio_keypad", \
+  ENV{eventlircd_enable}="true", \
+  ENV{eventlircd_evmap}="default.evmap"
 
 #-------------------------------------------------------------------------------
 # Ask eventlircd to handle USB HID devices that show up as event devices and are
@@ -160,6 +165,10 @@ ENV{ID_VENDOR_ID}=="1d57", ENV{ID_MODEL_ID}=="ac01", \
   ENV{eventlircd_enable}="true", \
   ENV{eventlircd_evmap}="03_$env{ID_VENDOR_ID}_$env{ID_MODEL_ID}.evmap"
 
+ENV{ID_VENDOR_ID}=="2252", ENV{ID_MODEL_ID}=="1037", \
+  ENV{eventlircd_enable}="true", \
+  ENV{eventlircd_evmap}="03_$env{ID_VENDOR_ID}_$env{ID_MODEL_ID}.evmap"
+
 #ENV{ID_VENDOR_ID}=="9022", ENV{ID_MODEL_ID}=="d660", \
 ATTRS{idVendor}=="9022", ATTRS{idProduct}=="d660", \
   ENV{eventlircd_enable}="true", \
@@ -212,6 +221,11 @@ ATTRS{name}=="BD Remote Control", \
 ATTRS{name}=="Sony Computer Entertainment Inc BD Remote Control", \
   ENV{eventlircd_enable}="true", \
   ENV{eventlircd_evmap}="ps3remote.evmap"
+
+# Amazon Fire TV stick remote
+ATTRS{name}=="Amazon Fire TV Remote", \
+  ENV{eventlircd_enable}="true", \
+  ENV{eventlircd_evmap}="aftvsremote.evmap"
 
 LABEL="end-bluetooth"
 

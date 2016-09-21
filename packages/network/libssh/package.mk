@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="libssh"
-PKG_VERSION="0.7.0"
+PKG_VERSION="0.7.3"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OpenSource"
 PKG_SITE="http://www.libssh.org/"
-PKG_URL="https://red.libssh.org/attachments/download/140/$PKG_NAME-$PKG_VERSION.tar.xz"
-PKG_DEPENDS_TARGET="toolchain zlib libressl"
+PKG_URL="https://git.libssh.org/projects/libssh.git/snapshot/$PKG_NAME-$PKG_VERSION.tar.bz2"
+PKG_DEPENDS_TARGET="toolchain libz libressl"
 PKG_PRIORITY="optional"
 PKG_SECTION="network"
 PKG_SHORTDESC="libssh: A working SSH implementation by means of a library"
@@ -32,14 +32,7 @@ PKG_LONGDESC="The ssh library was designed to be used by programmers needing a w
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-configure_target() {
-  cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_CONF \
-        -DCMAKE_INSTALL_PREFIX=/usr \
-        -DWITH_STATIC_LIB=1 \
-        -DWITH_SERVER="OFF" \
-        -DWITH_GCRYPT="OFF" \
-        ..
-}
+PKG_CMAKE_OPTS_TARGET="-DWITH_STATIC_LIB=1 -DWITH_SERVER=OFF -DWITH_GCRYPT=OFF"
 
 makeinstall_target() {
 # install static library only

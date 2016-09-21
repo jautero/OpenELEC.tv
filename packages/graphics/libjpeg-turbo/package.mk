@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="libjpeg-turbo"
-PKG_VERSION="1.4.0"
+PKG_VERSION="1.5.0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
@@ -30,6 +30,7 @@ PKG_SHORTDESC="libjpeg-turbo: a high-speed version of libjpeg for x86 and x86-64
 PKG_LONGDESC="libjpeg-turbo is a high-speed version of libjpeg for x86 and x86-64 processors which uses SIMD instructions (MMX, SSE2, etc.) to accelerate baseline JPEG compression and decompression. libjpeg-turbo is generally 2-4x as fast as the unmodified version of libjpeg, all else being equal."
 
 PKG_IS_ADDON="no"
+PKG_USE_CMAKE="no"
 PKG_AUTORECONF="yes"
 
 PKG_CONFIGURE_OPTS_HOST="--enable-static \
@@ -47,7 +48,7 @@ pre_configure_target() {
   export CFLAGS="$CFLAGS -fPIC -DPIC"
 }
 
-if [ $SIMD_SUPPORT = "no" ]; then
+if [ "$SIMD_SUPPORT" = "no" ]; then
   PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --without-simd"
 fi
 

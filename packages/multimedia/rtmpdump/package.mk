@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,14 +17,14 @@
 ################################################################################
 
 PKG_NAME="rtmpdump"
-PKG_VERSION="a107cef"
+PKG_VERSION="fa8646d"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://rtmpdump.mplayerhq.hu/"
-#PKG_URL="http://rtmpdump.mplayerhq.hu/download/$PKG_NAME-$PKG_VERSION.tgz"
-PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
-PKG_DEPENDS_TARGET="toolchain zlib libressl"
+PKG_GIT_URL="git://git.ffmpeg.org/rtmpdump"
+PKG_GIT_BRANCH="master"
+PKG_DEPENDS_TARGET="toolchain libz libressl"
 PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="rtmpdump: a toolkit for RTMP streams."
@@ -43,6 +43,7 @@ make_target() {
        CC="$CC" \
        LD="$LD" \
        AR="$AR" \
+       SHARED=no \
        CRYPTO="OPENSSL" \
        OPT="" \
        XCFLAGS="$CFLAGS" \
@@ -59,6 +60,7 @@ makeinstall_target() {
        CC="$CC" \
        LD="$LD" \
        AR="$AR" \
+       SHARED=no \
        CRYPTO="OPENSSL" \
        OPT="" \
        XCFLAGS="$CFLAGS" \
@@ -74,6 +76,7 @@ makeinstall_target() {
        CC="$CC" \
        LD="$LD" \
        AR="$AR" \
+       SHARED=no \
        CRYPTO="OPENSSL" \
        OPT="" \
        XCFLAGS="$CFLAGS" \
@@ -85,7 +88,7 @@ makeinstall_target() {
 post_makeinstall_target() {
   rm -rf $INSTALL/usr/sbin
 
-  # to be removed: hack for "compatibility"
-  mkdir -p $INSTALL/usr/lib
-    ln -sf librtmp.so.1 $INSTALL/usr/lib/librtmp.so.0
+#  # to be removed: hack for "compatibility"
+#  mkdir -p $INSTALL/usr/lib
+#    ln -sf librtmp.so.1 $INSTALL/usr/lib/librtmp.so.0
 }

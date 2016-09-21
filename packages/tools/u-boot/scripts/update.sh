@@ -32,11 +32,9 @@ if [ -z "$BOOT_DISK" ]; then
   esac
 fi
 
-# we don't have mounted /etc in initramfs so just load system type
-if [ -f $SYSTEM_ROOT/etc/profile.d/01-system_type.conf ]; then
-  . $SYSTEM_ROOT/etc/profile.d/01-system_type.conf
-else
-  SYSTEM_TYPE=""
+SYSTEM_TYPE=""
+if [ -f $SYSTEM_ROOT/usr/lib/openelec/imx6-system-type ]; then
+  . $SYSTEM_ROOT/usr/lib/openelec/imx6-system-type
 fi
 
 # mount $BOOT_ROOT r/w
@@ -60,7 +58,7 @@ fi
       # access boot partition 1
       echo 0 > /sys/block/mmcblk0boot0/force_ro
       # write u-boot to eMMC
-      dd if=$SYSTEM_ROOT/usr/share/bootloader/u-boot-$SYSTEM_TYPE.imx of=/dev/mmcblk0boot0 bs=1k seek=1 conv=fsync
+      dd if=$SYSTEM_ROOT/usr/share/bootloader/u-boot-$SYSTEM_TYPE.imx of=/dev/mmcblk0boot0 bs=1k seek=1 conv=fsync &>/dev/null
       # re-enable read-only access
       echo 1 > /sys/block/mmcblk0boot0/force_ro
       # enable boot partion 1 to boot
@@ -82,7 +80,7 @@ fi
 
     if [ -f $SYSTEM_ROOT/usr/share/bootloader/$SPL_SRC ]; then
       echo "*** updating u-boot SPL Blob on: $BOOT_DISK ..."
-      dd if="$SYSTEM_ROOT/usr/share/bootloader/$SPL_SRC" of="$BOOT_DISK" bs=1k seek=1 conv=fsync
+      dd if="$SYSTEM_ROOT/usr/share/bootloader/$SPL_SRC" of="$BOOT_DISK" bs=1k seek=1 conv=fsync &>/dev/null
     fi
   fi
 

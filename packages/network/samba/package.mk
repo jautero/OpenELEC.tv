@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.samba.org"
 PKG_URL="http://samba.org/samba/ftp/stable/$PKG_NAME-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain zlib attr connman"
+PKG_DEPENDS_TARGET="toolchain libz connman"
 PKG_PRIORITY="optional"
 PKG_SECTION="network"
 PKG_SHORTDESC="samba: The free SMB / CIFS fileserver and client"
@@ -174,6 +174,9 @@ makeinstall_target() {
     if [ -f $PROJECT_DIR/$PROJECT/config/smb.conf ]; then
       mkdir -p $INSTALL/etc/samba
         cp $PROJECT_DIR/$PROJECT/config/smb.conf $INSTALL/etc/samba
+    elif [ -f $DISTRO_DIR/$DISTRO/config/smb.conf ]; then
+      mkdir -p $INSTALL/etc/samba
+        cp $DISTRO_DIR/$DISTRO/config/smb.conf $INSTALL/etc/samba
     else
       mkdir -p $INSTALL/etc/samba
         cp $PKG_DIR/config/smb.conf $INSTALL/etc/samba
@@ -186,7 +189,6 @@ makeinstall_target() {
 
 post_install() {
   if [ "$SAMBA_SERVER" = "yes" ]; then
-    enable_service samba-defaults.service
     enable_service nmbd.service
     enable_service smbd.service
   fi

@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="Pillow"
-PKG_VERSION="2.7.0"
+PKG_VERSION="3.3.1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="BSD"
 PKG_SITE="http://www.pythonware.com/products/pil/"
-PKG_URL="https://pypi.python.org/packages/source/P/Pillow/$PKG_NAME-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain Python distutilscross:host zlib freetype libjpeg-turbo"
+PKG_URL="https://pypi.python.org/packages/7b/32/e6978aed8fba6398c00eec25f12798fb57647a6cef4f85db1567e3d086ef/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_DEPENDS_TARGET="toolchain Python distutilscross:host libz freetype libjpeg-turbo tiff"
 PKG_PRIORITY="optional"
 PKG_SECTION="python"
 PKG_SHORTDESC="pil: Imaging handling/processing for Python"
@@ -38,7 +38,7 @@ pre_make_target() {
 }
 
 make_target() {
-  python setup.py build --cross-compile
+  python setup.py build_ext --disable-platform-guessing
 }
 
 makeinstall_target() {

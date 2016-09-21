@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="glibc"
-PKG_VERSION="2.21"
+PKG_VERSION="2.24"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
@@ -34,6 +34,8 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 PKG_CONFIGURE_OPTS_TARGET="BASH_SHELL=/bin/sh \
+                           ac_cv_path_PERL= \
+                           ac_cv_prog_MAKEINFO= \
                            --libexecdir=/usr/lib/glibc \
                            --cache-file=config.cache \
                            --disable-profile \
@@ -43,7 +45,7 @@ PKG_CONFIGURE_OPTS_TARGET="BASH_SHELL=/bin/sh \
                            --with-elf \
                            --with-tls \
                            --with-__thread \
-                           --with-binutils=$BUILD/toolchain/bin \
+                           --with-binutils=$ROOT/$BUILD/toolchain/bin \
                            --with-headers=$SYSROOT_PREFIX/usr/include \
                            --enable-kernel=3.0.0 \
                            --without-cvs \
@@ -51,7 +53,8 @@ PKG_CONFIGURE_OPTS_TARGET="BASH_SHELL=/bin/sh \
                            --enable-obsolete-rpc \
                            --disable-build-nscd \
                            --disable-nscd \
-                           --enable-lock-elision"
+                           --enable-lock-elision \
+                           --disable-timezone-tools"
 
 if [ "$DEBUG" = yes ]; then
   PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --enable-debug"
@@ -61,10 +64,9 @@ fi
 
 NSS_CONF_DIR="$PKG_BUILD/nss"
 
-GLIBC_EXCLUDE_BIN="catchsegv gencat getconf iconv iconvconfig ldconfig lddlibc4"
+GLIBC_EXCLUDE_BIN="catchsegv gencat getconf iconv iconvconfig ldconfig"
 GLIBC_EXCLUDE_BIN="$GLIBC_EXCLUDE_BIN localedef makedb mtrace pcprofiledump"
-GLIBC_EXCLUDE_BIN="$GLIBC_EXCLUDE_BIN pldd rpcgen sln sotruss sprof tzselect"
-GLIBC_EXCLUDE_BIN="$GLIBC_EXCLUDE_BIN xtrace zdump zic"
+GLIBC_EXCLUDE_BIN="$GLIBC_EXCLUDE_BIN pldd rpcgen sln sotruss sprof xtrace"
 
 pre_build_target() {
   cd $PKG_BUILD
@@ -84,6 +86,8 @@ pre_configure_target() {
   export CFLAGS=`echo $CFLAGS | sed -e "s|-ffast-math||g"`
   export CFLAGS=`echo $CFLAGS | sed -e "s|-Ofast|-O2|g"`
   export CFLAGS=`echo $CFLAGS | sed -e "s|-O.|-O2|g"`
+  export CFLAGS=`echo $CFLAGS | sed -e "s|-fstack-protector-strong||g"`
+  export CFLAGS=`echo $CFLAGS | sed -e "s|-D_FORTIFY_SOURCE=.||g"`
 
   if [ -n "$PROJECT_CFLAGS" ]; then
     export CFLAGS=`echo $CFLAGS | sed -e "s|$PROJECT_CFLAGS||g"`
@@ -92,27 +96,24 @@ pre_configure_target() {
   export LDFLAGS=`echo $LDFLAGS | sed -e "s|-ffast-math||g"`
   export LDFLAGS=`echo $LDFLAGS | sed -e "s|-Ofast|-O2|g"`
   export LDFLAGS=`echo $LDFLAGS | sed -e "s|-O.|-O2|g"`
+  export LDFLAGS=`echo $LDFLAGS | sed -e "s|-fstack-protector-strong||g"`
+  export LDFLAGS=`echo $LDFLAGS | sed -e "s|-D_FORTIFY_SOURCE=.||g"`
 
   export LDFLAGS=`echo $LDFLAGS | sed -e "s|-Wl,--as-needed||"`
 
   unset LD_LIBRARY_PATH
 
-# set some CFLAGS we need
-  export CFLAGS="$CFLAGS -g -fno-stack-protector -fgnu89-inline"
-
-# dont build parallel
-  export MAKEFLAGS=-j1
+  # set some CFLAGS we need
+  export CFLAGS="$CFLAGS -g"
 
   export BUILD_CC=$HOST_CC
   export OBJDUMP_FOR_HOST=objdump
 
 cat >config.cache <<EOF
-ac_cv_header_cpuid_h=yes
 libc_cv_forced_unwind=yes
 libc_cv_c_cleanup=yes
-libc_cv_gnu89_inline=yes
 libc_cv_ssp=no
-libc_cv_ctors_header=yes
+libc_cv_ssp_strong=no
 libc_cv_slibdir=/lib
 EOF
 
@@ -139,10 +140,13 @@ post_makeinstall_target() {
 
 # remove locales and charmaps
   rm -rf $INSTALL/usr/share/i18n/charmaps
-  rm -rf $INSTALL/usr/share/i18n/locales
 
-  mkdir -p $INSTALL/usr/share/i18n/locales
-    cp -PR $ROOT/$PKG_BUILD/localedata/locales/POSIX $INSTALL/usr/share/i18n/locales
+  if [ ! "$GLIBC_LOCALES" = yes ]; then
+    rm -rf $INSTALL/usr/share/i18n/locales
+
+    mkdir -p $INSTALL/usr/share/i18n/locales
+      cp -PR $ROOT/$PKG_BUILD/localedata/locales/POSIX $INSTALL/usr/share/i18n/locales
+  fi
 
 # create default configs
   mkdir -p $INSTALL/etc
@@ -169,6 +173,7 @@ makeinstall_init() {
     cp -PR $ROOT/$PKG_BUILD/.$TARGET_NAME/elf/ld*.so* $INSTALL/lib
     cp $ROOT/$PKG_BUILD/.$TARGET_NAME/libc.so.6 $INSTALL/lib
     cp $ROOT/$PKG_BUILD/.$TARGET_NAME/nptl/libpthread.so.0 $INSTALL/lib
+    cp -PR $ROOT/$PKG_BUILD/.$TARGET_NAME/rt/librt.so* $INSTALL/lib
 
     if [ "$TARGET_ARCH" = "arm" -a "$TARGET_FLOAT" = "hard" ]; then
       ln -sf ld.so $INSTALL/lib/ld-linux.so.3

@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,20 @@ if [ "$IRSERVER_SUPPORT" = yes ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET irserver"
 fi
 
-PKG_CONFIGURE_OPTS_TARGET="--enable-libusb --enable-drivers=$LCD_DRIVER,!curses,!svga --enable-seamless-hbars"
+IFS=$','
+for i in $LCD_DRIVER; do
+  case $i in
+    glcd) PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET freetype serdisplib"
+      ;;
+    *)
+  esac
+done
+unset IFS
+
+PKG_CONFIGURE_OPTS_TARGET="--with-ft-prefix=$SYSROOT_PREFIX/usr \
+                           --enable-libusb \
+                           --enable-drivers=$LCD_DRIVER,!curses,!svga \
+                           --enable-seamless-hbars"
 
 pre_make_target() {
   # dont build parallel
@@ -59,6 +72,7 @@ post_makeinstall_target() {
       -e "s|^#Hello=\"   LCDproc!\"|Hello=\"$DISTRONAME\"|" \
       -e "s|^#GoodBye=\"Thanks for using\"|GoodBye=\"Thanks for using\"|" \
       -e "s|^#GoodBye=\"   LCDproc!\"|GoodBye=\"$DISTRONAME\"|" \
+      -e "s|^#normal_font=.*$|normal_font=/usr/share/fonts/liberation/LiberationMono-Bold.ttf|" \
       -i $INSTALL/etc/LCDd.conf
 
     mkdir -p $INSTALL/usr/lib/openelec

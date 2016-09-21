@@ -2,31 +2,43 @@
   DISTRONAME="OpenELEC"
 
 # short project description
-  DESCRIPTION="OpenELEC is a fast and userfriendly Kodi Entertainment Center distribution."
+  DESCRIPTION="OpenELEC is a fast and user-friendly Kodi Entertainment Center distribution."
 
 # Welcome Message for e.g. SSH Server (up to 5 Lines)
   GREETING0="##############################################"
-  GREETING1="# OpenELEC - The living room PC for everyone #"
-  GREETING2="# ...... visit http://www.openelec.tv ...... #"
+  GREETING1="#                  OpenELEC                  #"
+  GREETING2="#             http://openelec.tv             #"
   GREETING3="##############################################"
   GREETING4=""
+
+# Specify the support URL to show in various packages.
+  SUPPORT_URL="http://www.openelec.tv"
 
 # Root password to integrate in the target system
   ROOT_PASSWORD="openelec"
 
+# Install glibc locales to the build (yes / no)
+  GLIBC_LOCALES="yes"
+
 # Mediacenter to use (kodi / no)
   MEDIACENTER="kodi"
 
-# Skins to install (Confluence)
+# Skins to install (Estuary)
 # Space separated list is supported,
-# e.g. SKINS="Confluence"
-  SKINS="Confluence"
+# e.g. SKINS="Estuary"
+  SKINS=""
 
-# Default Skin (Confluence)
-  SKIN_DEFAULT="Confluence"
+# remove default skin included in Kodi (yes/no)
+  SKIN_REMOVE_SHIPPED="no"
+
+# Default Skin (Confluence, or any from above)
+  SKIN_DEFAULT="Estuary"
 
 # install extra subtitle Fonts for KODI (yes / no)
   KODI_EXTRA_FONTS="yes"
+
+# build and install PulseAudio support (yes / no)
+  PULSEAUDIO_SUPPORT="yes"
 
 # build and install espeak support (yes / no)
   ESPEAK_SUPPORT="yes"
@@ -54,7 +66,7 @@
 # for a list of additinoal drivers see packages/linux-drivers
 # Space separated list is supported,
 # e.g. ADDITIONAL_DRIVERS="DRIVER1 DRIVER2"
-  ADDITIONAL_DRIVERS="RTL8192CU RTL8192DU RTL8188EU RTL8812AU dvbhdhomerun"
+  ADDITIONAL_DRIVERS="RTL8192CU RTL8192DU RTL8192EU RTL8812AU" # todo: mt7610u dvbhdhomerun
 
 # build and install bluetooth support (yes / no)
   BLUETOOTH_SUPPORT="yes"
@@ -89,6 +101,9 @@
 # build with Samba Client support (mounting SAMBA shares with KODI) (yes / no)
   KODI_SAMBA_SUPPORT="yes"
 
+# include initial language addons for Kodi (yes / no)
+  KODI_LANGUAGE_ADDONS="yes"
+
 # build with NFS support (mounting nfs shares via the OS) (yes / no)
   NFS_SUPPORT="yes"
 
@@ -100,6 +115,12 @@
 
 # build and install SFTP Server (yes / no)
   SFTP_SERVER="yes"
+
+# build and install PPP support (yes / no)
+  PPTP_SUPPORT="yes"
+
+# build and install OpenVPN support (yes / no)
+  OPENVPN_SUPPORT="yes"
 
 # build and install diskmounter support (udevil)
 # this service provide auto mounting support for external drives in the
@@ -121,7 +142,7 @@
 # Xorg Graphic drivers to use (all / i915,i965,r200,r300,r600,nvidia)
 # Space separated list is supported,
 # e.g. GRAPHIC_DRIVERS="i915 i965 r300 r600 radeonsi nvidia"
-  GRAPHIC_DRIVERS="r300 r600 radeonsi i915 i965 nvidia"
+  GRAPHIC_DRIVERS="r200 r300 r600 radeonsi i915 i965 nvidia nvidia-legacy"
 
 # build and install remote support (yes / no)
   REMOTE_SUPPORT="yes"
@@ -132,9 +153,6 @@
 # build and install IRServer IR/LCD support (yes / no)
   IRSERVER_SUPPORT="yes"
 
-# build and install Joystick support (yes / no)
-  JOYSTICK_SUPPORT="yes"
-
 # build and install CEC adapter support (yes / no)
   CEC_SUPPORT="yes"
 
@@ -143,7 +161,7 @@
 
 # LCD driver to Use - Possible drivers are ( Comma seperated:
 # bayrad,CFontz,CFontz633,CFontzPacket,curses,CwLnx,dm140,
-# ea65,EyeboxOne,g15,glcdlib,glk,hd44780,i2500vfd,
+# ea65,EyeboxOne,g15,glcd,glcdlib,glk,hd44780,i2500vfd,
 # icp_a106,imon,imonlcd,IOWarrior,irman,irtrans,
 # joy,lb216,lcdm001,lcterm,lirc,lis,MD8800,mdm166a,
 # ms6931,mtc_s16209x,MtxOrb,mx5000,NoritakeVFD,
@@ -152,7 +170,7 @@
 # 'all' compiles all drivers;
 # 'all,!xxx,!yyy' de-selects previously selected drivers
 # "none" for disable LCD support
-  LCD_DRIVER="irtrans,imon,imonlcd,mdm166a,MtxOrb,lis,dm140,hd44780,CFontz,SureElec,vlsys_m428,serialVFD,shuttleVFD"
+  LCD_DRIVER="irtrans,imon,imonlcd,mdm166a,MtxOrb,lis,dm140,hd44780,CFontz,SureElec,vlsys_m428,serialVFD,shuttleVFD,glcd"
 
 # Support for partitioning and formating disks in initramfs (yes / no)
 # This adds support for parted and mkfs.ext3/4 to initramfs for OEM usage
@@ -192,3 +210,8 @@
 # set the addon dirs
   ADDON_PATH="$ADDON_VERSION/$PROJECT/$TARGET_ARCH"
   ADDON_URL="$ADDON_SERVER_URL/$ADDON_PATH"
+
+# Default size of system partition, in MB, eg. 512
+  SYSTEM_SIZE=512
+# Default system partition offset, in sectors, eg. 2048
+  SYSTEM_PART_START=2048

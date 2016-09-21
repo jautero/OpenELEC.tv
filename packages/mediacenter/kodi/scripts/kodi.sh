@@ -45,11 +45,10 @@ single_stacktrace()
 
 print_crash_report()
 {
-  if [ ! -d $CRASHLOG_DIR ] ; then
-    mkdir -p $CRASHLOG_DIR
-  fi
+  mkdir -p $CRASHLOG_DIR
+
   DATE=`date +%Y%m%d%H%M%S`
-  FILE="$CRASHLOG_DIR/kodi_crashlog_$DATE.log"
+  FILE="$CRASHLOG_DIR/.kodi_crashlog.log"
   echo "############## kodi CRASH LOG ###############" > $FILE
   echo >> $FILE
   echo "################ SYSTEM INFO ################" >> $FILE
@@ -80,6 +79,9 @@ print_crash_report()
   echo "############### END LOG FILE ################" >> $FILE
   echo >> $FILE
   echo "############ END kodi CRASH LOG #############" >> $FILE
+  OFILE="$FILE"
+  FILE="$CRASHLOG_DIR/kodi_crashlog_$DATE.log"
+  mv "$OFILE" "$FILE"
   echo "Crash report available at $FILE"
 }
 

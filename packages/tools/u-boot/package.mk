@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -22,9 +22,10 @@ if [ "$UBOOT_VERSION" = "default" ]; then
   PKG_SITE="http://www.denx.de/wiki/U-Boot/WebHome"
   PKG_URL="ftp://ftp.denx.de/pub/u-boot/$PKG_NAME-$PKG_VERSION.tar.bz2"
 elif [ "$UBOOT_VERSION" = "imx6-cuboxi" ]; then
-  PKG_VERSION="imx6-144b1e9"
+  PKG_VERSION="73d683b"
   PKG_SITE="http://imx.solid-run.com/wiki/index.php?title=Building_the_kernel_and_u-boot_for_the_CuBox-i_and_the_HummingBoard"
-  PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+  PKG_GIT_URL="https://github.com/SolidRun/u-boot-imx6.git"
+  PKG_GIT_BRANCH="imx6"
 else
   exit 0
 fi
@@ -54,6 +55,10 @@ pre_configure_target() {
 
 # dont build in parallel because of problems
   MAKEFLAGS=-j1
+
+# copy compiler-gcc5.h to compiler-gcc6. for fake building
+  cp include/linux/compiler-gcc5.h include/linux/compiler-gcc6.h
+
 }
 
 make_target() {
@@ -74,8 +79,8 @@ make_target() {
         TARGET_NAME="cuboxi"
       elif [ "$UBOOT_TARGET" = "matrix" ]; then
         TARGET_NAME="matrix"
-      elif [ "$UBOOT_TARGET" = "udoo_quad_config" ]; then
-        TARGET_NAME="udoo_quad"
+      elif [ "$UBOOT_TARGET" = "udoo_config" ]; then
+        TARGET_NAME="udoo"
       else
         TARGET_NAME="undef"
       fi

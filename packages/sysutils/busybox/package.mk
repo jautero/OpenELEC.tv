@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="busybox"
-PKG_VERSION="1.23.2"
+PKG_VERSION="1.25.0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
@@ -66,6 +66,12 @@ if [ -f $PROJECT_DIR/$PROJECT/busybox/busybox-init.conf ]; then
   BUSYBOX_CFG_FILE_INIT=$PROJECT_DIR/$PROJECT/busybox/busybox-init.conf
 else
   BUSYBOX_CFG_FILE_INIT=$PKG_DIR/config/busybox-init.conf
+fi
+
+if [ -f $PROJECT_DIR/$PROJECT/busybox/init ]; then
+  BUSYBOX_INIT_FILE=$PROJECT_DIR/$PROJECT/busybox/init
+else
+  BUSYBOX_INIT_FILE=$PKG_DIR/scripts/init
 fi
 
 pre_build_target() {
@@ -167,6 +173,7 @@ makeinstall_target() {
 
   mkdir -p $INSTALL/usr/lib/openelec
     cp $PKG_DIR/scripts/fs-resize $INSTALL/usr/lib/openelec
+      sed -e "s/@DISTRONAME@/$DISTRONAME/g" -i $INSTALL/usr/lib/openelec/fs-resize
 
   mkdir -p $INSTALL/etc
     cp $PKG_DIR/config/profile $INSTALL/etc
@@ -182,9 +189,6 @@ makeinstall_target() {
 
   # /etc/machine-id, needed by systemd and dbus
     ln -sf /run/machine-id $INSTALL/etc/machine-id
-
-  # /etc/hosts must be writeable
-    ln -sf /var/cache/hosts $INSTALL/etc/hosts
 
   # /etc/mtab is needed by udisks etc...
     ln -sf /proc/self/mounts $INSTALL/etc/mtab
@@ -250,6 +254,7 @@ makeinstall_init() {
     chmod 755 $INSTALL/platform_init
   fi
 
-  cp $PKG_DIR/scripts/init $INSTALL
+  cp $BUSYBOX_INIT_FILE $INSTALL
+    sed -e "s/@DISTRONAME@/$DISTRONAME/g" -i $INSTALL/init
   chmod 755 $INSTALL/init
 }

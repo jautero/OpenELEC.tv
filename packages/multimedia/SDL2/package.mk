@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,12 +17,12 @@
 ################################################################################
 
 PKG_NAME="SDL2"
-PKG_VERSION="2.0.3"
+PKG_VERSION="2.0.4"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
-PKG_SITE="http://www.libsdl.org/"
-PKG_URL="http://www.libsdl.org/release/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_SITE="https://www.libsdl.org/"
+PKG_URL="https://www.libsdl.org/release/$PKG_NAME-$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain yasm:host alsa-lib systemd dbus"
 PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
@@ -30,6 +30,7 @@ PKG_SHORTDESC="SDL2: A cross-platform Graphic API"
 PKG_LONGDESC="Simple DirectMedia Layer is a cross-platform multimedia library designed to provide fast access to the graphics framebuffer and audio device. It is used by MPEG playback software, emulators, and many popular games, including the award winning Linux port of 'Civilization: Call To Power.' Simple DirectMedia Layer supports Linux, Win32, BeOS, MacOS, Solaris, IRIX, and FreeBSD."
 
 PKG_IS_ADDON="no"
+PKG_USE_CMAKE="no"
 PKG_AUTORECONF="no"
 
 PKG_CONFIGURE_OPTS_TARGET="--disable-shared --enable-static \
@@ -55,7 +56,6 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-shared --enable-static \
                            --with-alsa-prefix=$SYSROOT_PREFIX/usr/lib \
                            --with-alsa-inc-prefix=$SYSROOT_PREFIX/usr/include \
                            --disable-esd --disable-esdtest --disable-esd-shared \
-                           --disable-pulseaudio --disable-pulseaudio-shared \
                            --disable-arts --disable-arts-shared \
                            --disable-nas --enable-nas-shared \
                            --disable-sndio --enable-sndio-shared \
@@ -95,12 +95,19 @@ else
   PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --disable-video-x11-vm --without-x"
 fi
 
-if [ ! "$OPENGL" = "no" ]; then
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $OPENGL glu"
-
+if [ "$OPENGL" = "mesa" ]; then
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET opengl glu"
   PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --enable-video-opengl --disable-video-opengles"
 else
   PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --disable-video-opengl --disable-video-opengles"
+fi
+
+if [ "$PULSEAUDIO_SUPPORT" = yes ]; then
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET pulseaudio"
+
+  PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --enable-pulseaudio --enable-pulseaudio-shared"
+else
+  PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --disable-pulseaudio --disable-pulseaudio-shared"
 fi
 
 pre_make_target() {
@@ -109,9 +116,7 @@ pre_make_target() {
 }
 
 post_makeinstall_target() {
-  mkdir -p $ROOT/$TOOLCHAIN/bin
-    cp $SYSROOT_PREFIX/usr/bin/sdl2-config $ROOT/$TOOLCHAIN/bin
-    $SED "s:\(['=\" ]\)/usr:\\1$SYSROOT_PREFIX/usr:g" $SYSROOT_PREFIX/usr/bin/sdl2-config
+  $SED "s:\(['=\" ]\)/usr:\\1$SYSROOT_PREFIX/usr:g" $SYSROOT_PREFIX/usr/bin/sdl2-config
 
   rm -rf $INSTALL/usr/bin
 }

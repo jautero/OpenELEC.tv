@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,12 +17,12 @@
 ################################################################################
 
 PKG_NAME="libirman"
-PKG_VERSION="0.4.5"
+PKG_VERSION="0.5.2"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://sourceforge.net/projects/lirc"
-PKG_URL="http://downloads.sourceforge.net/project/lirc/libirman/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_URL="http://downloads.sourceforge.net/project/libirman/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain systemd"
 PKG_PRIORITY="optional"
 PKG_SECTION="system"

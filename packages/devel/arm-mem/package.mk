@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,14 +17,15 @@
 ################################################################################
 
 PKG_NAME="arm-mem"
-PKG_VERSION="2e6f275"
+PKG_VERSION="3aee5f4"
 PKG_REV="1"
 PKG_ARCH="arm"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/bavison/arm-mem"
-PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_GIT_URL="https://github.com/bavison/arm-mem.git"
+PKG_GIT_BRANCH="master"
 PKG_DEPENDS_TARGET="toolchain"
-PKG_DEPENDS_INIT="toolchain"
+PKG_DEPENDS_INIT="toolchain arm-mem"
 PKG_PRIORITY="optional"
 PKG_SECTION="devel"
 PKG_SHORTDESC="arm-mem: ARM-accelerated versions of selected functions from string.h"
@@ -34,6 +35,11 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 PKG_MAKE_OPTS_TARGET="libarmmem.so"
+
+pre_make_target() {
+  export CROSS_COMPILE=$TARGET_PREFIX
+  export CFLAGS="$CFLAGS -fPIC"
+}
 
 make_init() {
   : # reuse make_target()

@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="xf86-input-libinput"
-PKG_VERSION="0.10.0"
+PKG_VERSION="0.19.0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
@@ -32,9 +32,9 @@ PKG_LONGDESC="This is an X driver based on libinput."
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
-PKG_CONFIGURE_OPTS_TARGET="--with-xorg-module-dir=$XORG_PATH_MODULES"
+PKG_CONFIGURE_OPTS_TARGET="--with-xorg-module-dir=/usr/lib/xorg/modules"
 
 post_makeinstall_target() {
   mkdir -p $INSTALL/usr/share/X11/xorg.conf.d
-    cp $ROOT/$PKG_BUILD/conf/99-libinput.conf $INSTALL/usr/share/X11/xorg.conf.d
+    cp $ROOT/$PKG_BUILD/conf/60-libinput.conf $INSTALL/usr/share/X11/xorg.conf.d
 }

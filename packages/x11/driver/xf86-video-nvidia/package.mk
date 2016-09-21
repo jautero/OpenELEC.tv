@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,10 @@
 ################################################################################
 
 PKG_NAME="xf86-video-nvidia"
-PKG_VERSION="346.72"
+# Remember to run "python packages/x11/driver/xf86-video-nvidia/scripts/make_nvidia_udev.py" and commit changes to
+# "packages/x11/driver/xf86-video-nvidia/udev.d/96-nvidia.rules" whenever bumping version.
+# Host may require installation of python-lxml and python-requests packages.
+PKG_VERSION="370.28"
 PKG_REV="1"
 PKG_ARCH="x86_64"
 PKG_LICENSE="nonfree"
@@ -45,16 +48,18 @@ make_target() {
 
   cd kernel
     make module CC=$CC SYSSRC=$(kernel_path) SYSOUT=$(kernel_path)
+    $STRIP --strip-debug nvidia.ko
   cd ..
 }
 
 makeinstall_target() {
-  mkdir -p $INSTALL/$XORG_PATH_MODULES/drivers
-    cp -P nvidia_drv.so $INSTALL/$XORG_PATH_MODULES/drivers
+  mkdir -p $INSTALL/usr/lib/xorg/modules/drivers
+    cp -P nvidia_drv.so $INSTALL/usr/lib/xorg/modules/drivers/nvidia-main_drv.so
+    ln -sf /var/lib/nvidia_drv.so $INSTALL/usr/lib/xorg/modules/drivers/nvidia_drv.so
 
-  mkdir -p $INSTALL/$XORG_PATH_MODULES/extensions
+  mkdir -p $INSTALL/usr/lib/xorg/modules/extensions
   # rename to not conflicting with Mesa libGL.so
-    cp -P libglx.so* $INSTALL/$XORG_PATH_MODULES/extensions/libglx_nvidia.so
+    cp -P libglx.so* $INSTALL/usr/lib/xorg/modules/extensions/libglx_nvidia.so
 
   mkdir -p $INSTALL/etc/X11
     cp $PKG_DIR/config/*.conf $INSTALL/etc/X11
@@ -62,19 +67,27 @@ makeinstall_target() {
   mkdir -p $INSTALL/usr/lib
     cp -P libnvidia-glcore.so.$PKG_VERSION $INSTALL/usr/lib
     cp -P libnvidia-ml.so.$PKG_VERSION $INSTALL/usr/lib
-      ln -sf libnvidia-ml.so.$PKG_VERSION $INSTALL/usr/lib/libnvidia-ml.so.1
+      ln -sf /var/lib/libnvidia-ml.so.1 $INSTALL/usr/lib/libnvidia-ml.so.1
     cp -P tls/libnvidia-tls.so.$PKG_VERSION $INSTALL/usr/lib
   # rename to not conflicting with Mesa libGL.so
-    cp -P libGL.so* $INSTALL/usr/lib/libGL_nvidia.so.1
+    cp -P libGL.so.$PKG_VERSION* $INSTALL/usr/lib/libGL_nvidia.so.1
 
   mkdir -p $INSTALL/lib/modules/$(get_module_dir)/nvidia
-    cp kernel/nvidia.ko $INSTALL/lib/modules/$(get_module_dir)/nvidia
+    cp -P kernel/nvidia-uvm.ko $INSTALL/lib/modules/$(get_module_dir)/nvidia
+    cp -P kernel/nvidia-modeset.ko $INSTALL/lib/modules/$(get_module_dir)/nvidia
+    ln -sf /var/lib/nvidia.ko $INSTALL/lib/modules/$(get_module_dir)/nvidia/nvidia.ko
+
+  mkdir -p $INSTALL/usr/lib/nvidia
+    cp -P kernel/nvidia.ko $INSTALL/usr/lib/nvidia
 
   mkdir -p $INSTALL/usr/bin
-    cp nvidia-smi $INSTALL/usr/bin
-    cp nvidia-xconfig $INSTALL/usr/bin
+    ln -s /var/lib/nvidia-smi $INSTALL/usr/bin/nvidia-smi
+    cp nvidia-smi $INSTALL/usr/bin/nvidia-main-smi
+    ln -s /var/lib/nvidia-xconfig $INSTALL/usr/bin/nvidia-xconfig
+    cp nvidia-xconfig $INSTALL/usr/bin/nvidia-main-xconfig
 
   mkdir -p $INSTALL/usr/lib/vdpau
-    cp libvdpau_nvidia.so* $INSTALL/usr/lib/vdpau/libvdpau_nvidia.so.1
-    ln -sf libvdpau_nvidia.so.1 $INSTALL/usr/lib/vdpau/libvdpau_nvidia.so
+    cp libvdpau_nvidia.so* $INSTALL/usr/lib/vdpau/libvdpau_nvidia-main.so.1
+    ln -sf /var/lib/libvdpau_nvidia.so $INSTALL/usr/lib/vdpau/libvdpau_nvidia.so
+    ln -sf /var/lib/libvdpau_nvidia.so.1 $INSTALL/usr/lib/vdpau/libvdpau_nvidia.so.1
 }

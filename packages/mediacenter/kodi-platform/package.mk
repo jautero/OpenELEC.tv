@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,14 @@
 ################################################################################
 
 PKG_NAME="kodi-platform"
-PKG_VERSION="054a42f66"
+PKG_VERSION="c8188d8"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.kodi.tv"
-PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
-PKG_DEPENDS_TARGET="toolchain tinyxml kodi platform"
+PKG_GIT_URL="https://github.com/xbmc/kodi-platform"
+PKG_GIT_BRANCH="master"
+PKG_DEPENDS_TARGET="toolchain tinyxml kodi p8-platform"
 PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="kodi-platform:"
@@ -32,15 +33,10 @@ PKG_LONGDESC="kodi-platform:"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-configure_target() {
-  cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_CONF \
-        -DCMAKE_INSTALL_PREFIX=/usr \
-        -DCMAKE_INSTALL_PREFIX_TOOLCHAIN=$SYSROOT_PREFIX/usr \
-        -DCMAKE_MODULE_PATH=$SYSROOT_PREFIX/usr/lib/kodi \
-        -DCMAKE_PREFIX_PATH=$SYSROOT_PREFIX/usr \
-        -DBUILD_SHARED_LIBS=0 \
-        ..
-}
+PKG_CMAKE_OPTS_TARGET="-DCMAKE_MODULE_PATH=$SYSROOT_PREFIX/usr/lib/kodi \
+                       -DCMAKE_PREFIX_PATH=$SYSROOT_PREFIX/usr \
+                       -DCMAKE_INSTALL_PREFIX_TOOLCHAIN=$SYSROOT_PREFIX/usr \
+                       -DBUILD_SHARED_LIBS=0"
 
 post_makeinstall_target() {
   rm -rf $INSTALL/usr/lib/kodiplatform

@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="wpa_supplicant"
-PKG_VERSION="2.4"
+PKG_VERSION="2.5"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://hostap.epitest.fi/wpa_supplicant/"
 PKG_URL="http://hostap.epitest.fi/releases/$PKG_NAME-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain dbus libnl libressl"
+PKG_DEPENDS_TARGET="toolchain dbus libnl-tiny libressl"
 PKG_PRIORITY="optional"
 PKG_SECTION="network"
 PKG_SHORTDESC="wpa_supplicant: An IEEE 802.11i supplicant implementation"
@@ -37,7 +37,7 @@ PKG_MAKEINSTALL_OPTS_TARGET="-C wpa_supplicant V=1 LIBDIR=/usr/lib BINDIR=/usr/b
 
 configure_target() {
   LDFLAGS="$LDFLAGS -lpthread -lm"
-
+  CFLAGS="$CFLAGS -D_GNU_SOURCE -DCONFIG_LIBNL20 -I$SYSROOT_PREFIX/usr/include/libnl-tiny"
   cp $PKG_DIR/config/makefile.config wpa_supplicant/.config
 
 # echo "CONFIG_TLS=gnutls" >> .config

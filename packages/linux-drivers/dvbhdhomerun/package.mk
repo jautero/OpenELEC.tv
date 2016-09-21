@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -35,23 +35,25 @@ PKG_LONGDESC="A linux DVB driver for the HDHomeRun TV tuner (http://www.silicond
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-configure_target() {
-  ( cd kernel
+PKG_CMAKE_SCRIPT="userhdhomerun/CMakeLists.txt"
+
+pre_make_target() {
+  ( cd ../kernel
     LDFLAGS="" make dvb_hdhomerun KERNEL_DIR=$(kernel_path)
     fix_module_depends dvb_hdhomerun_core.ko "dvb_core"
   )
+}
+
+pre_configure_target() {
+
+# use it here to be sure libhdhomerun is already built
+  PKG_CMAKE_OPTS_TARGET="-DLIBHDHOMERUN_PATH=$(ls -d $ROOT/$BUILD/libhdhomerun-*/)"
 
 # absolute path
   LIBHDHOMERUN_PATH=$(ls -d $ROOT/$BUILD/libhdhomerun-*/)
-  sed -i "s|SET(LIBHDHOMERUN_PATH .*)|SET(LIBHDHOMERUN_PATH $LIBHDHOMERUN_PATH)|g" userhdhomerun/CMakeLists.txt
-  sed -i "s|/etc/dvbhdhomerun|/tmp/dvbhdhomerun|g" userhdhomerun/hdhomerun_tuner.cpp
-  sed -i "s|/etc/dvbhdhomerun|/tmp/dvbhdhomerun|g" userhdhomerun/hdhomerun_controller.cpp
-
-  mkdir -p .$TARGET_NAME && cd .$TARGET_NAME
-  cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_CONF \
-        -DCMAKE_INSTALL_PREFIX=/usr \
-        -DLIBHDHOMERUN_PATH=$(ls -d $ROOT/$BUILD/libhdhomerun-*/) \
-        ../userhdhomerun
+  sed -i "s|SET(LIBHDHOMERUN_PATH .*)|SET(LIBHDHOMERUN_PATH $LIBHDHOMERUN_PATH)|g" ../userhdhomerun/CMakeLists.txt
+  sed -i "s|/etc/dvbhdhomerun|/tmp/dvbhdhomerun|g" ../userhdhomerun/hdhomerun_tuner.cpp
+  sed -i "s|/etc/dvbhdhomerun|/tmp/dvbhdhomerun|g" ../userhdhomerun/hdhomerun_controller.cpp
 }
 
 makeinstall_target() {

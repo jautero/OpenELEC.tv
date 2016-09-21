@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="LGPL"
 PKG_SITE="http://www.multiprecision.org"
-PKG_URL="http://www.multiprecision.org/mpc/download/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_URL="http://ftp.gnu.org/gnu/mpc/$PKG_NAME-$PKG_VERSION.tar.gz"
 PKG_DEPENDS_HOST="ccache:host gmp:host mpfr:host"
 PKG_PRIORITY="optional"
 PKG_SECTION="devel"

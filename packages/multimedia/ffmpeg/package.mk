@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 #
 #  OpenELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="ffmpeg"
-PKG_VERSION="2.6.3"
+PKG_VERSION="3.1.3"
 PKG_REV="1"
 PKG_ARCH="any"
-PKG_LICENSE="LGPL"
-PKG_SITE="http://ffmpeg.org"
-PKG_URL="https://www.ffmpeg.org/releases/${PKG_NAME}-${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="toolchain yasm:host zlib bzip2 libvorbis libressl"
+PKG_LICENSE="LGPLv2.1+"
+PKG_SITE="https://ffmpeg.org"
+PKG_URL="https://ffmpeg.org/releases/${PKG_NAME}-${PKG_VERSION}.tar.gz"
+PKG_DEPENDS_TARGET="toolchain yasm:host libz bzip2 libressl speex"
 PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="FFmpeg is a complete, cross-platform solution to record, convert and stream audio and video."
@@ -42,18 +42,11 @@ else
   FFMPEG_VAAPI="--disable-vaapi"
 fi
 
-if [ "$VDPAU_SUPPORT" = yes ]; then
+if [ "$VDPAU_SUPPORT" = "yes" -a "$DISPLAYSERVER" = "x11" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libvdpau"
   FFMPEG_VDPAU="--enable-vdpau"
 else
   FFMPEG_VDPAU="--disable-vdpau"
-fi
-
-if [ "$DCADEC_SUPPORT" = yes ]; then
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET dcadec"
-  FFMPEG_LIBDCADEC="--enable-libdcadec"
-else
-  FFMPEG_LIBDCADEC="--disable-libdcadec"
 fi
 
 if [ "$DEBUG" = yes ]; then
@@ -62,16 +55,16 @@ else
   FFMPEG_DEBUG="--disable-debug --enable-stripping"
 fi
 
+if [ "$KODIPLAYER_DRIVER" = "bcm2835-firmware" ]; then
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET bcm2835-firmware"
+fi
+
 case "$TARGET_ARCH" in
   arm)
-      FFMPEG_CPU=""
       FFMPEG_TABLES="--enable-hardcoded-tables"
-      FFMPEG_PIC="--enable-pic"
   ;;
-  x86_64)
-      FFMPEG_CPU=""
+  *)
       FFMPEG_TABLES="--disable-hardcoded-tables"
-      FFMPEG_PIC="--enable-pic"
   ;;
 esac
 
@@ -96,6 +89,11 @@ pre_configure_target() {
 
 # ffmpeg fails running with GOLD support
   strip_gold
+
+  if [ "$KODIPLAYER_DRIVER" = "bcm2835-firmware" ]; then
+    export CFLAGS="-I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux -DRPI=1 $CFLAGS"
+    export FFMPEG_LIBS="-lbcm_host -lvcos -lvchiq_arm -lmmal -lmmal_core -lmmal_util -lvcsm"
+  fi
 }
 
 configure_target() {
@@ -119,7 +117,7 @@ configure_target() {
               --host-libs="-lm" \
               --extra-cflags="$CFLAGS" \
               --extra-ldflags="$LDFLAGS -fPIC" \
-              --extra-libs="" \
+              --extra-libs="$FFMPEG_LIBS" \
               --extra-version="" \
               --build-suffix="" \
               --disable-static \
@@ -130,10 +128,9 @@ configure_target() {
               --enable-logging \
               --disable-doc \
               $FFMPEG_DEBUG \
-              $FFMPEG_PIC \
+              --enable-pic \
               --pkg-config="$ROOT/$TOOLCHAIN/bin/pkg-config" \
               --enable-optimizations \
-              --disable-armv5te --disable-armv6t2 \
               --disable-extra-warnings \
               --disable-ffprobe \
               --disable-ffplay \
@@ -150,7 +147,7 @@ configure_target() {
               --disable-w32threads \
               --disable-x11grab \
               --enable-network \
-              --disable-gnutls --enable-libressl \
+              --disable-gnutls --enable-openssl \
               --disable-gray \
               --enable-swscale-alpha \
               --disable-small \
@@ -169,6 +166,8 @@ configure_target() {
               --enable-encoder=ac3 \
               --enable-encoder=aac \
               --enable-encoder=wmav2 \
+              --enable-encoder=mjpeg \
+              --enable-encoder=png \
               --disable-decoder=mpeg_xvmc \
               --enable-hwaccels \
               --disable-muxers \
@@ -191,7 +190,6 @@ configure_target() {
               --disable-libopencore-amrwb \
               --disable-libopencv \
               --disable-libdc1394 \
-              $FFMPEG_LIBDCADEC \
               --disable-libfaac \
               --disable-libfreetype \
               --disable-libgsm \
@@ -200,11 +198,10 @@ configure_target() {
               --disable-libopenjpeg \
               --disable-librtmp \
               --disable-libschroedinger \
-              --disable-libspeex \
+              --enable-libspeex \
               --disable-libtheora \
-              --disable-libvo-aacenc \
               --disable-libvo-amrwbenc \
-              --enable-libvorbis --enable-muxer=ogg --enable-encoder=libvorbis \
+              --disable-libvorbis \
               --disable-libvpx \
               --disable-libx264 \
               --disable-libxavs \
@@ -212,7 +209,6 @@ configure_target() {
               --enable-zlib \
               --enable-asm \
               --disable-altivec \
-              $FFMPEG_CPU \
               $FFMPEG_FPU \
               --enable-yasm \
               --disable-symver
